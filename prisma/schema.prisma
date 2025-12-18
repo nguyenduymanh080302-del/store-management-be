@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  PENDING
+  CANCELED
+  PREPARING
+  DELIVERING
+  DONE
+}
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique
+  name        String    @unique
+  accounts    Account[]
+  permissions String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Account {
+  id        Int      @id @default(autoincrement())
+  name      String
+  avatar    String?
+  phone     String?
+  address   String?
+  username  String   @unique
+  email     String?  @unique
+  password  String
+  isActive  Boolean  @default(true)
+  roleId    Int
+  role      Role     @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Warehouse {
+  id        Int                @id @default(autoincrement())
+  name      String             @unique
+  products  WarehouseProduct[]
+  quantity  Int                @default(0)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+model Product {
+  id                Int                @id @default(autoincrement())
+  units             ProductUnit[]
+  name              String
+  slug              String             @unique
+  images            String[]
+  description       String
+  categoryId        Int
+  category          Category           @relation(fields: [categoryId], references: [id])
+  warehouseProducts WarehouseProduct[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Unit {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  productUnits ProductUnit[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ProductUnit {
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id])
+  unitId      Int
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  importPrice Float
+  sellPrice   Float
+  vatPercent  Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@id([productId, unitId])
+}
+
+model WarehouseProduct {
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  quantity    Int       @default(0)
+
+  @@id([warehouseId, productId])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  address   String
+  debt      Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  address   String
+  debt      Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              Int            @id @default(autoincrement())
+  orderCode       String         @unique
+  customerId      Int?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  customerAddress String
+  customerPayment Float
+  paymentMethodId Int
+  paymentMethod   PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  vatValue        Float
+  discountValue   Float
+  products        OrderProduct[]
+  totalAmount     Float
+  toPayAmount     Float
+  status          OrderStatus    @default(PENDING)
+  creatorId       Int
+  createBy        Account        @relation(fields: [creatorId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model OrderProduct {
+  id        Int      @id @default(autoincrement())
+  orderId   Int?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  productId Int
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PaymentMethod {
+  id        Int      @id @default(autoincrement())
+  method    String   @unique
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

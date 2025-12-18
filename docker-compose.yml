@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    container_name: postgres
+    environment:
+      POSTGRES_USER: store_management
+      POSTGRES_PASSWORD: store_management
+      POSTGRES_DB: store_management
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local
