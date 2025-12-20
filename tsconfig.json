@@ -31,6 +31,10 @@
         "src/prisma/*"
       ]
     },
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
+    ],
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
