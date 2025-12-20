@@ -41,8 +41,9 @@ model Session {
   userAgent    String?
   ipAddress    String?
 
-  expiresAt DateTime
-  revokedAt DateTime?
+  expiresAt  DateTime // ABSOLUTE expiry (30 days)
+  lastUsedAt DateTime // IDLE tracking (refresh activity)
+  revoked    Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

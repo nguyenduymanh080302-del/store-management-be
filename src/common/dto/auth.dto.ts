@@ -1,36 +1,62 @@
-import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsDefined, IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export class SigninDto {
-    @IsNotEmpty() @IsString() @MinLength(2) @MaxLength(32)
+    @IsDefined({ message: 'message.account.username.is-required' })
+    @IsString({ message: "message.account.username.must-is-string" })
+    @MinLength(2, { message: "message.account.username.min-length-is-2" })
+    @MaxLength(32, { message: "message.account.username.max-length-is-32" })
     username: string;
 
-    @IsNotEmpty() @IsString() @MinLength(2) @MaxLength(32)
+    @IsDefined({ message: 'message.account.password.is-required' })
+    @IsString({ message: "message.account.password.must-is-string" })
+    @MinLength(6, { message: "message.account.password.min-length-is-6" })
+    @MaxLength(32, { message: "message.account.password.max-length-is-32" })
     password: string;
 }
 
 export class SignupDto {
-    @IsNotEmpty() @IsString() @MinLength(2) @MaxLength(64)
+    @IsDefined({ message: 'message.account.name.is-required' })
+    @IsString({ message: "message.account.name.must-is-string" })
+    @MinLength(2, { message: "message.account.name.min-length-is-2" })
+    @MaxLength(64, { message: "message.account.name.max-length-is-64" })
     name: string;
 
-    @IsNotEmpty() @IsString() @MinLength(6) @MaxLength(32)
+    @IsDefined({ message: 'message.account.name.is-required' })
+    @IsString({ message: "message.account.username.must-is-string" })
+    @MinLength(2, { message: "message.account.username.min-length-is-2" })
+    @MaxLength(32, { message: "message.account.username.max-length-is-32" })
     username: string;
 
-    @IsNotEmpty() @IsString() @MinLength(6) @MaxLength(64)
+    @IsDefined({ message: 'message.account.name.is-required' })
+    @IsString({ message: "message.account.password.must-is-string" })
+    @MinLength(6, { message: "message.account.password.min-length-is-6" })
+    @MaxLength(32, { message: "message.account.password.max-length-is-32" })
     password: string;
 
-    @IsNotEmpty() @IsInt()
+    @IsDefined({ message: 'message.account.name.is-required' })
+    @Type(() => Number)
+    @IsInt({ message: "message.account.role.must-is-number" })
     roleId: number;
 
     // optional fields
-    @IsEmail() @IsOptional()
+    @IsEmail({}, { message: "message.account.email.wrong-format" })
+    @IsOptional()
     email?: string;
 
-    @IsString() @IsOptional()
+    @IsString()
+    @IsOptional()
     avatar?: string;
 
-    @IsString() @IsOptional()
+    @IsString()
+    @IsOptional()
+    @Matches(/^[0-9]{9,11}$/, {
+        message: 'message.account.phone.invalid',
+    })
     phone?: string;
 
-    @IsString() @IsOptional()
+    @MaxLength(64, { message: "message.account.address.max-length-is-64" })
+    @IsString()
+    @IsOptional()
     address?: string;
 }
