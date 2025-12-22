@@ -8,10 +8,16 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt-access'
     constructor(config: ConfigService) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: config.get('ACCESS_TOKEN_SECRET') || "access-token-secret",
-        })
+            secretOrKey: config.get('ACCESS_TOKEN_SECRET') || "store-management-access-token-secret",
+        });
     }
+
     validate(payload: any) {
-        return payload;
+        return {
+            accountId: payload.sub,
+            sessionId: payload.sessionId,
+            role: payload.role,
+            permissions: payload.permissions,
+        };
     }
 }

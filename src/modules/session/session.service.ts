@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { hashData, compareHash } from 'common/helper/hash.helper';
 import dayjs from 'dayjs';
@@ -54,19 +54,19 @@ export class SessionService {
         });
 
         if (!session || session.revoked) {
-            throw new ForbiddenException('Access denied');
+            throw new UnauthorizedException('message.session.timeout');
         }
 
         // absolute expiry (30 days)
         if (now > session.expiresAt) {
             await this.revokeSession(sessionId);
-            throw new ForbiddenException('Session expired');
+            throw new UnauthorizedException('message.session.timeout');
         }
 
         // idle timeout (10 days)
         if (dayjs(now).diff(session.lastUsedAt, 'day') >= 10) {
             await this.revokeSession(sessionId);
-            throw new ForbiddenException('Session inactive');
+            throw new UnauthorizedException('message.session.timeout');
         }
 
         const tokenMatched = await compareHash(
@@ -77,7 +77,7 @@ export class SessionService {
         if (!tokenMatched) {
             // refresh-token reuse protection
             await this.revokeSession(sessionId);
-            throw new ForbiddenException('Access denied');
+            throw new UnauthorizedException('message.session.invalid');
         }
 
         return session;

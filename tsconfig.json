@@ -27,6 +27,9 @@
       "strategies/*": [
         "src/strategies/*"
       ],
+      "utils/*": [
+        "src/utils/*"
+      ],
       "prisma/*": [
         "src/prisma/*"
       ]

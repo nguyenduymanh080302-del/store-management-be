@@ -6,8 +6,7 @@ export const GetUser = createParamDecorator(
         const user = request.user;
 
         if (!data) return user;
-
-        if (data === 'accountId') return user.sub;
         return user[data];
     },
 );
+
