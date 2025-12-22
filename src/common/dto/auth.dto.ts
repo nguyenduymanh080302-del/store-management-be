@@ -1,12 +1,23 @@
 import { Type } from "class-transformer";
 import { IsDefined, IsEmail, IsInt, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
-export class AccountDto {
 
-    @IsDefined({ message: 'message.account.id.is-required' })
-    @Type(() => Number)
-    @IsInt({ message: "message.account.id.must-is-number" })
-    id: number
+export class SigninDto {
+    @IsDefined({ message: 'message.account.name.is-required' })
+    @IsString({ message: "message.account.username.must-is-string" })
+    @MinLength(2, { message: "message.account.username.min-length-is-2" })
+    @MaxLength(32, { message: "message.account.username.max-length-is-32" })
+    username: string;
+
+
+    @IsDefined({ message: 'message.account.name.is-required' })
+    @IsString({ message: "message.account.password.must-is-string" })
+    @MinLength(6, { message: "message.account.password.min-length-is-6" })
+    @MaxLength(32, { message: "message.account.password.max-length-is-32" })
+    password: string;
+}
+
+export class SignupDto {
 
     @IsDefined({ message: 'message.account.name.is-required' })
     @IsString({ message: "message.account.name.must-is-string" })

@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { AccountDto } from 'common/dto/account.dto';
+import { SigninDto, SignupDto } from 'common/dto/auth.dto';
 import { RoleDto } from 'common/dto/role.dto';
 import { compareHash, hashData } from 'common/helper/hash.helper';
 import { Request } from 'express';
@@ -53,7 +53,7 @@ export class AuthService {
     }
 
 
-    async signup(payload: Omit<AccountDto, "id">) {
+    async signup(payload: SignupDto) {
 
         const checkExistAccount = await this.getAccountByUsername(payload.username)
         if (checkExistAccount) {
@@ -76,7 +76,7 @@ export class AuthService {
         return { accountId: newAccount.id }
     }
 
-    async signin(payload: Pick<AccountDto, "username" | "password">, req: Request) {
+    async signin(payload: SigninDto, req: Request) {
         const { username, password } = payload;
 
         const account = await this.getAccountByUsername(username)

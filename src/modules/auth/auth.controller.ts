@@ -7,20 +7,20 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiResponse } from 'src/types';
-import { AuthService } from './auth.service';
-import type { Request } from 'express';
 import { GetUser } from 'common/decorators/account.decorator';
+import { SigninDto, SignupDto } from 'common/dto/auth.dto';
 import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 import { JwtRefreshGuard } from 'common/guards/jwt-refresh.guard';
-import { AccountDto } from 'common/dto/account.dto';
+import type { Request } from 'express';
+import { ApiResponse } from 'src/types';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('signup')
-  async signup(@Body() payload: Omit<AccountDto, "id">): Promise<ApiResponse<{ accountId: number }>> {
+  async signup(@Body() payload: SignupDto): Promise<ApiResponse<{ accountId: number }>> {
     const data = await this.authService.signup(payload);
     return {
       status: HttpStatus.CREATED,
@@ -32,7 +32,7 @@ export class AuthController {
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signin(
-    @Body() payload: Pick<AccountDto, "username" | "password">,
+    @Body() payload: SigninDto,
     @Req() req: Request
   ): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
     const data = await this.authService.signin(payload, req);
