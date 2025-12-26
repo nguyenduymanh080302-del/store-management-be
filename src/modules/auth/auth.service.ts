@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SigninDto, SignupDto } from 'common/dto/auth.dto';
 import { RoleDto } from 'common/dto/role.dto';
+import { sanitizeAccount } from 'common/helper/format.helper';
 import { compareHash, hashData } from 'common/helper/hash.helper';
 import { Request } from 'express';
 import { SessionService } from 'modules/session/session.service';
@@ -30,12 +31,10 @@ export class AuthService {
         })
     }
 
-    async getTokens(accountId: number, sessionId: number, role: RoleDto, permissions: string[]) {
+    async getTokens(accountId: number, sessionId: number) {
         const payload = {
             sub: accountId,
             sessionId,
-            role: role,
-            permissions: permissions
         };
 
         const [accessToken, refreshToken] = await Promise.all([
@@ -93,13 +92,16 @@ export class AuthService {
             account.id,
             req,
         );
-        const tokens = await this.getTokens(account.id, session.id, { id: account.role.id, name: account.role.name }, account.role.permissions);
+        const tokens = await this.getTokens(account.id, session.id);
         await this.sessionService.attachRefreshToken(
             session.id,
             tokens.refreshToken,
         );
 
-        return tokens;
+        return {
+            ...tokens,
+            account: sanitizeAccount(account)
+        };
     }
 
 
@@ -124,7 +126,7 @@ export class AuthService {
         if (!account)
             throw new UnauthorizedException("message.account.unauthorized")
 
-        const tokens = await this.getTokens(accountId, sessionId, { id: account.role.id, name: account.role.name }, account.role.permissions);
+        const tokens = await this.getTokens(accountId, sessionId);
         await this.sessionService.attachRefreshToken(
             sessionId,
             tokens.refreshToken,

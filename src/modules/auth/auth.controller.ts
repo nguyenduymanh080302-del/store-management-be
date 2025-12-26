@@ -14,6 +14,7 @@ import { JwtRefreshGuard } from 'common/guards/jwt-refresh.guard';
 import type { Request } from 'express';
 import { ApiResponse } from 'src/types';
 import { AuthService } from './auth.service';
+import { AccountEntity } from 'common/entities/account.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -34,7 +35,7 @@ export class AuthController {
   async signin(
     @Body() payload: SigninDto,
     @Req() req: Request
-  ): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
+  ): Promise<ApiResponse<{ accessToken: string; refreshToken: string, account: any }>> {
     const data = await this.authService.signin(payload, req);
     return {
       status: HttpStatus.OK,
