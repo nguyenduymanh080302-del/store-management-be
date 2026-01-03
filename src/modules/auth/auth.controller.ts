@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { GetUser } from 'common/decorators/account.decorator';
@@ -54,6 +56,21 @@ export class AuthController {
     return {
       status: HttpStatus.OK,
       message: 'message.account.logout-success',
+    };
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  async getAccountByToken(@GetUser("accountId") accountId: number): Promise<ApiResponse<Omit<AccountEntity, "password">>> {
+    if (!accountId) {
+      throw new UnauthorizedException("message.account.id-not-found")
+    }
+    const data: any = await this.authService.getAccountById(accountId);
+    return {
+      status: HttpStatus.OK,
+      message: 'message.account.is-authenticated',
+      data,
     };
   }
 

@@ -2,7 +2,6 @@ import { ConflictException, ForbiddenException, Injectable, UnauthorizedExceptio
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SigninDto, SignupDto } from 'common/dto/auth.dto';
-import { RoleDto } from 'common/dto/role.dto';
 import { sanitizeAccount } from 'common/helper/format.helper';
 import { compareHash, hashData } from 'common/helper/hash.helper';
 import { Request } from 'express';
@@ -16,10 +15,19 @@ export class AuthService {
     async getAccountById(accountId: number) {
         return this.prisma.account.findUnique({
             where: { id: accountId },
-            include: {
-                role: true
-            }
-        })
+            select: {
+                id: true,
+                name: true,
+                username: true,
+                email: true,
+                phone: true,
+                address: true,
+                avatar: true,
+                createdAt: true,
+                updatedAt: true,
+                role: true,
+            },
+        });
     }
 
     async getAccountByUsername(username: string) {
