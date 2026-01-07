@@ -1,0 +1,87 @@
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { UnitService } from './unit.service';
+import { ApiResponse } from 'src/types';
+import { CreateUnitBodyDto, DeleteUnitParamDto, GetUnitParamDto, UpdateUnitBodyDto, UpdateUnitParamDto } from 'common/dto/unit.dto';
+import { UnitEntity } from 'common/entities/unit.entity';
+import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
+
+@Controller('unit')
+export class UnitController {
+  constructor(private readonly unitService: UnitService) { }
+
+  // CREATE
+  @UseGuards(JwtAccessGuard)
+  @Post()
+  async createUnit(@Body() data: CreateUnitBodyDto): Promise<ApiResponse<UnitEntity>> {
+    const result = await this.unitService.createUnit(data);
+
+    return {
+      status: HttpStatus.CREATED,
+      message: 'message.unit.created',
+      data: result,
+    };
+  }
+
+  // READ ALL
+  @Get()
+  async findAllUnit(): Promise<ApiResponse<UnitEntity[]>> {
+    const result = await this.unitService.findAllUnit();
+
+    return {
+      status: HttpStatus.OK,
+      message: 'message.unit.success',
+      data: result,
+    };
+  }
+
+  // READ ONE
+  @Get(':id')
+  async findUnitById(@Param() params: GetUnitParamDto): Promise<ApiResponse<UnitEntity>> {
+    const result = await this.unitService.findUnitById(params.id);
+
+    return {
+      status: HttpStatus.OK,
+      message: 'message.unit.success',
+      data: result,
+    };
+  }
+
+  // UPDATE
+  @UseGuards(JwtAccessGuard)
+  @Patch(':id')
+  async updateUnit(@Param() params: UpdateUnitParamDto, @Body() data: UpdateUnitBodyDto): Promise<ApiResponse<UnitEntity>> {
+    if (!data.name) {
+      throw new BadRequestException("message.unit.missing-data")
+    }
+
+    const result = await this.unitService.updateUnit(params.id, data);
+
+    return {
+      status: HttpStatus.OK,
+      message: 'message.unit.updated',
+      data: result,
+    };
+  }
+
+  // DELETE
+  @Delete(':id')
+  async removeUnit(@Param() params: DeleteUnitParamDto): Promise<ApiResponse<null>> {
+    await this.unitService.removeUnit(params.id);
+
+    return {
+      status: HttpStatus.OK,
+      message: 'message.unit.deleted',
+    };
+  }
+}
