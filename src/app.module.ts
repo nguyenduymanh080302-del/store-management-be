@@ -6,7 +6,9 @@ import { SessionModule } from 'modules/session/session.module';
 import { PrismaModule } from 'prisma/prisma.module';
 import { CategoryModule } from './modules/category/category.module';
 import { UnitModule } from 'modules/unit/unit.module';
-
+import { SupplierModule } from 'modules/supplier/supplier.module';
+import { CustomerModule } from 'modules/customer/customer.module';
+import { DeliveryModule } from 'modules/delivery/delivery.module';
 
 @Module({
   imports: [
@@ -19,7 +21,10 @@ import { UnitModule } from 'modules/unit/unit.module';
     SessionModule,
     OrderModule,
     CategoryModule,
-    UnitModule
+    UnitModule,
+    SupplierModule,
+    CustomerModule,
+    DeliveryModule
   ]
 })
 export class AppModule { }

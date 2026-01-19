@@ -1,69 +1,84 @@
 import {
   ConflictException,
   Injectable,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
-import { CreateUnitBodyDto, UpdateUnitBodyDto } from 'common/dto/unit.dto';
+import {
+  CreateSupplierBodyDto,
+  UpdateSupplierBodyDto,
+} from 'common/dto/supplier.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class UnitService {
+export class SupplierService {
   constructor(private readonly prisma: PrismaService) { }
 
   // CREATE
-  async createUnit(
-    data: CreateUnitBodyDto,
-  ) {
-    const exists = await this.prisma.unit.findUnique({
-      where: { name: data.name },
+  async createSupplier(data: CreateSupplierBodyDto) {
+    const exists = await this.prisma.supplier.findUnique({
+      where: { email: data.email },
     });
 
     if (exists) {
-      throw new ConflictException("message.unit.name-duplicated");
+      throw new ConflictException('message.supplier.email-duplicated');
     }
 
-    const newUnit = await this.prisma.unit.create({ data });
-    return newUnit
+    const newSupplier = await this.prisma.supplier.create({
+      data,
+    });
+
+    return newSupplier;
   }
 
   // READ ALL
-  async findAllUnit() {
-    return await this.prisma.unit.findMany({
+  async findAllSupplier() {
+    return await this.prisma.supplier.findMany({
       orderBy: { name: 'desc' },
     });
   }
 
   // READ ONE
-  async findUnitById(id: number) {
-    const unit = await this.prisma.unit.findUnique({
+  async findSupplierById(id: number) {
+    const supplier = await this.prisma.supplier.findUnique({
       where: { id },
     });
 
-    if (!unit) {
-      throw new NotFoundException('message.unit.not-found');
+    if (!supplier) {
+      throw new NotFoundException('message.supplier.not-found');
     }
 
-    return unit;
+    return supplier;
   }
 
   // UPDATE
-  async updateUnit(
+  async updateSupplier(
     id: number,
-    data: UpdateUnitBodyDto,
+    data: UpdateSupplierBodyDto,
   ) {
-    await this.findUnitById(id);
+    await this.findSupplierById(id);
 
-    return this.prisma.unit.update({
+    // Check email duplication if email is being updated
+    if (data.email) {
+      const exists = await this.prisma.supplier.findUnique({
+        where: { email: data.email },
+      });
+
+      if (exists && exists.id !== id) {
+        throw new ConflictException('message.supplier.email-duplicated');
+      }
+    }
+
+    return this.prisma.supplier.update({
       where: { id },
       data,
     });
   }
 
   // DELETE
-  async removeUnit(id: number) {
-    await this.findUnitById(id);
+  async removeSupplier(id: number) {
+    await this.findSupplierById(id);
 
-    return this.prisma.unit.delete({
+    return this.prisma.supplier.delete({
       where: { id },
     });
   }

@@ -10,49 +10,59 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { UnitService } from './supplier.service';
+import { SupplierService } from './supplier.service';
 import { ApiResponse } from 'src/types';
-import { CreateUnitBodyDto, DeleteUnitParamDto, GetUnitParamDto, UpdateUnitBodyDto, UpdateUnitParamDto } from 'common/dto/unit.dto';
-import { UnitEntity } from 'common/entities/unit.entity';
+import {
+  CreateSupplierBodyDto,
+  DeleteSupplierParamDto,
+  GetSupplierParamDto,
+  UpdateSupplierBodyDto,
+  UpdateSupplierParamDto,
+} from 'common/dto/supplier.dto';
+import { SupplierEntity } from 'common/entities/supplier.entity';
 import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 
-@Controller('unit')
-export class UnitController {
-  constructor(private readonly unitService: UnitService) { }
+@Controller('supplier')
+export class SupplierController {
+  constructor(private readonly supplierService: SupplierService) { }
 
   // CREATE
   @UseGuards(JwtAccessGuard)
   @Post()
-  async createUnit(@Body() data: CreateUnitBodyDto): Promise<ApiResponse<UnitEntity>> {
-    const result = await this.unitService.createUnit(data);
+  async createSupplier(
+    @Body() data: CreateSupplierBodyDto,
+  ): Promise<ApiResponse<SupplierEntity>> {
+    const result = await this.supplierService.createSupplier(data);
 
     return {
       status: HttpStatus.CREATED,
-      message: 'message.unit.created',
+      message: 'message.supplier.created',
       data: result,
     };
   }
 
   // READ ALL
   @Get()
-  async findAllUnit(): Promise<ApiResponse<UnitEntity[]>> {
-    const result = await this.unitService.findAllUnit();
+  async findAllSupplier(): Promise<ApiResponse<SupplierEntity[]>> {
+    const result = await this.supplierService.findAllSupplier();
 
     return {
       status: HttpStatus.OK,
-      message: 'message.unit.success',
+      message: 'message.supplier.success',
       data: result,
     };
   }
 
   // READ ONE
   @Get(':id')
-  async findUnitById(@Param() params: GetUnitParamDto): Promise<ApiResponse<UnitEntity>> {
-    const result = await this.unitService.findUnitById(params.id);
+  async findSupplierById(
+    @Param() params: GetSupplierParamDto,
+  ): Promise<ApiResponse<SupplierEntity>> {
+    const result = await this.supplierService.findSupplierById(params.id);
 
     return {
       status: HttpStatus.OK,
-      message: 'message.unit.success',
+      message: 'message.supplier.success',
       data: result,
     };
   }
@@ -60,28 +70,37 @@ export class UnitController {
   // UPDATE
   @UseGuards(JwtAccessGuard)
   @Patch(':id')
-  async updateUnit(@Param() params: UpdateUnitParamDto, @Body() data: UpdateUnitBodyDto): Promise<ApiResponse<UnitEntity>> {
-    if (!data.name) {
-      throw new BadRequestException("message.unit.missing-data")
+  async updateSupplier(
+    @Param() params: UpdateSupplierParamDto,
+    @Body() data: UpdateSupplierBodyDto,
+  ): Promise<ApiResponse<SupplierEntity>> {
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestException('message.supplier.missing-data');
     }
 
-    const result = await this.unitService.updateUnit(params.id, data);
+    const result = await this.supplierService.updateSupplier(
+      params.id,
+      data,
+    );
 
     return {
       status: HttpStatus.OK,
-      message: 'message.unit.updated',
+      message: 'message.supplier.updated',
       data: result,
     };
   }
 
   // DELETE
+  @UseGuards(JwtAccessGuard)
   @Delete(':id')
-  async removeUnit(@Param() params: DeleteUnitParamDto): Promise<ApiResponse<null>> {
-    await this.unitService.removeUnit(params.id);
+  async removeSupplier(
+    @Param() params: DeleteSupplierParamDto,
+  ): Promise<ApiResponse<null>> {
+    await this.supplierService.removeSupplier(params.id);
 
     return {
       status: HttpStatus.OK,
-      message: 'message.unit.deleted',
+      message: 'message.supplier.deleted',
     };
   }
 }

@@ -1,8 +1,9 @@
-export class Role {
+export class RoleEntity {
     id: number
     code: string
     name: string
     permissions: string[]
-    createdAt: string
-    updatedAt: string
+    isActive: boolean
+    createdAt: Date
+    updatedAt: Date
 }

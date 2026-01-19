@@ -1,4 +1,3 @@
-// common/guards/permission.guard.ts
 import {
     CanActivate,
     ExecutionContext,
@@ -28,16 +27,23 @@ export class PermissionGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const user = request.user;
 
-        if (!user || !Array.isArray(user.permissions)) {
-            throw new ForbiddenException('Permission denied');
+        const userPermissions: string[] | undefined =
+            user?.role?.permissions;
+
+        if (!userPermissions) {
+            throw new ForbiddenException(
+                'message.permission.access-denied',
+            );
         }
 
         const hasPermission = requiredPermissions.some(permission =>
-            user.permissions.includes(permission),
+            userPermissions.includes(permission),
         );
 
         if (!hasPermission) {
-            throw new ForbiddenException('Permission denied');
+            throw new ForbiddenException(
+                'message.permission.access-denied',
+            );
         }
 
         return true;
