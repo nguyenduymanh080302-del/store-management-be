@@ -34,9 +34,8 @@ export class CreateDeliveryBodyDto {
     @MaxLength(128, { message: "message.delivery.email-max-length-is-128" })
     email?: string;
 
-    @IsDefined({ message: "message.delivery.phone-is-required" })
+    @IsOptional()
     @IsString({ message: "message.delivery.phone-must-is-string" })
-    @IsNotEmpty({ message: "message.delivery.phone-not-empty" })
     @MaxLength(20, { message: "message.delivery.phone-max-length-is-20" })
     phone: string;
 

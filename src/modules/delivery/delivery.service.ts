@@ -57,14 +57,14 @@ export class DeliveryService {
     ) {
         await this.findDeliveryById(id);
 
-        // Check email duplication if email is being updated
-        if (data.email) {
+        // Check phone duplication if phone is being updated
+        if (data.phone) {
             const exists = await this.prisma.delivery.findUnique({
-                where: { email: data.email },
+                where: { phone: data.phone },
             });
 
             if (exists && exists.id !== id) {
-                throw new ConflictException('message.delivery.email-duplicated');
+                throw new ConflictException('message.delivery.phone-duplicated');
             }
         }
 

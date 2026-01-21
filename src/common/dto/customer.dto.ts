@@ -31,22 +31,20 @@ export class CreateCustomerBodyDto {
     @MaxLength(64, { message: 'message.customer.name-max-length-is-64' })
     name: string;
 
-    @IsDefined({ message: 'message.customer.email-is-required' })
+    @IsOptional()
     @IsEmail({}, { message: 'message.customer.email-invalid' })
     @MaxLength(128, { message: 'message.customer.email-max-length-is-128' })
     email: string;
 
-    @IsDefined({ message: 'message.customer.phone-is-required' })
+    @IsOptional()
     @IsString({ message: 'message.customer.phone-must-is-string' })
-    @IsNotEmpty({ message: 'message.customer.phone-not-empty' })
     @Matches(/^(03|05|07|08|09)\d{8}$/, {
         message: 'message.customer.phone-invalid-vn',
     })
     phone: string;
 
-    @IsDefined({ message: 'message.customer.address-is-required' })
+    @IsOptional()
     @IsString({ message: 'message.customer.address-must-is-string' })
-    @IsNotEmpty({ message: 'message.customer.address-not-empty' })
     @MaxLength(255, { message: 'message.customer.address-max-length-is-255' })
     address: string;
 

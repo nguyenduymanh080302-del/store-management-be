@@ -32,7 +32,7 @@ export class PermissionGuard implements CanActivate {
 
         if (!userPermissions) {
             throw new ForbiddenException(
-                'message.permission.access-denied',
+                'message.permission.no-permission',
             );
         }
 

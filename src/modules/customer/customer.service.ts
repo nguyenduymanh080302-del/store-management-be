@@ -15,12 +15,14 @@ export class CustomerService {
 
     // CREATE
     async createCustomer(data: CreateCustomerBodyDto) {
-        const exists = await this.prisma.customer.findUnique({
-            where: { email: data.email },
-        });
+        if (data.phone) {
+            const exists = await this.prisma.customer.findUnique({
+                where: { phone: data.phone },
+            });
 
-        if (exists) {
-            throw new ConflictException('message.customer.email-duplicated');
+            if (exists) {
+                throw new ConflictException('message.customer.phone-duplicated');
+            }
         }
 
         return this.prisma.customer.create({
@@ -55,14 +57,14 @@ export class CustomerService {
     ) {
         await this.findCustomerById(id);
 
-        // Check email duplication if email is updated
-        if (data.email) {
+        // Check phone duplication if phone is updated
+        if (data.phone) {
             const exists = await this.prisma.customer.findUnique({
-                where: { email: data.email },
+                where: { phone: data.phone },
             });
 
             if (exists && exists.id !== id) {
-                throw new ConflictException('message.customer.email-duplicated');
+                throw new ConflictException('message.customer.phone-duplicated');
             }
         }
 

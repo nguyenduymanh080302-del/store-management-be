@@ -9,6 +9,7 @@ import { UnitModule } from 'modules/unit/unit.module';
 import { SupplierModule } from 'modules/supplier/supplier.module';
 import { CustomerModule } from 'modules/customer/customer.module';
 import { DeliveryModule } from 'modules/delivery/delivery.module';
+import { RoleModule } from 'modules/role/role.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { DeliveryModule } from 'modules/delivery/delivery.module';
     UnitModule,
     SupplierModule,
     CustomerModule,
-    DeliveryModule
+    DeliveryModule,
+    RoleModule,
   ]
 })
 export class AppModule { }

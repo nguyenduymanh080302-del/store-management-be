@@ -30,20 +30,18 @@ export class CreateSupplierBodyDto {
     @MaxLength(64, { message: "message.supplier.name-max-length-is-64" })
     name: string;
 
-    @IsDefined({ message: "message.supplier.email-is-required" })
+    @IsOptional()
     @IsEmail({}, { message: "message.supplier.email-invalid" })
     @MaxLength(128, { message: "message.supplier.email-max-length-is-128" })
     email: string;
 
-    @IsDefined({ message: "message.supplier.phone-is-required" })
+    @IsOptional()
     @IsString({ message: "message.supplier.phone-must-is-string" })
-    @IsNotEmpty({ message: "message.supplier.phone-not-empty" })
     @MaxLength(20, { message: "message.supplier.phone-max-length-is-20" })
     phone: string;
 
-    @IsDefined({ message: "message.supplier.address-is-required" })
+    @IsOptional()
     @IsString({ message: "message.supplier.address-must-is-string" })
-    @IsNotEmpty({ message: "message.supplier.address-not-empty" })
     @MaxLength(255, { message: "message.supplier.address-max-length-is-255" })
     address: string;
 

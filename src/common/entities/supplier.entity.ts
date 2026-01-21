@@ -1,10 +1,10 @@
 export class SupplierEntity {
     id: number;
     name: string;
-    email: string;
-    phone: string;
-    address: string;
-    debt: number;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    debt: number | null;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -2,6 +2,7 @@ import { ConflictException, ForbiddenException, Injectable, UnauthorizedExceptio
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SigninDto, SignupDto } from 'common/dto/auth.dto';
+import { AccountEntity } from 'common/entities/account.entity';
 import { sanitizeAccount } from 'common/helper/format.helper';
 import { compareHash, hashData } from 'common/helper/hash.helper';
 import { Request } from 'express';
@@ -39,9 +40,10 @@ export class AuthService {
         })
     }
 
-    async getTokens(accountId: number, sessionId: number) {
+    async getTokens(account: Pick<AccountEntity, 'id' | 'role'>, sessionId: number) {
         const payload = {
-            sub: accountId,
+            sub: account.id,
+            role: account.role,
             sessionId,
         };
 
@@ -100,7 +102,7 @@ export class AuthService {
             account.id,
             req,
         );
-        const tokens = await this.getTokens(account.id, session.id);
+        const tokens = await this.getTokens(account, session.id);
         await this.sessionService.attachRefreshToken(
             session.id,
             tokens.refreshToken,
@@ -134,7 +136,7 @@ export class AuthService {
         if (!account)
             throw new UnauthorizedException("message.account.unauthorized")
 
-        const tokens = await this.getTokens(accountId, sessionId);
+        const tokens = await this.getTokens(account, sessionId);
         await this.sessionService.attachRefreshToken(
             sessionId,
             tokens.refreshToken,
