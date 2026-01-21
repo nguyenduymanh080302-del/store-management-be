@@ -76,7 +76,7 @@ model Product {
   id                Int                @id @default(autoincrement())
   name              String
   slug              String             @unique
-  images            String[]
+  images            Image[]
   description       String
   categoryId        Int
   isActive          Boolean            @default(true)
@@ -85,6 +85,15 @@ model Product {
   category          Category           @relation(fields: [categoryId], references: [id])
   units             ProductUnit[]
   warehouseProducts WarehouseProduct[]
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String   @unique
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Unit {
@@ -176,22 +185,24 @@ model Order {
   customerPhone   String
   customerAddress String
   customerPayment Float
-  paymentMethodId Int
+  deliveryPerson  String?
+  deliveryPhone   String?
   vatValue        Float
   discountValue   Float
   totalAmount     Float
   toPayAmount     Float
   status          OrderStatus    @default(PENDING)
   creatorId       Int
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
   warehouseId     Int
   deliveryId      Int?
-  createBy        Account        @relation(fields: [creatorId], references: [id])
-  customer        Customer?      @relation(fields: [customerId], references: [id])
+  paymentMethodId Int
+  createdBy       Account        @relation(fields: [creatorId], references: [id])
   delivery        Delivery?      @relation(fields: [deliveryId], references: [id])
+  customer        Customer?      @relation(fields: [customerId], references: [id])
   paymentMethod   PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
   products        OrderProduct[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model OrderProduct {
@@ -207,7 +218,7 @@ model OrderProduct {
 
 model PaymentMethod {
   id        Int      @id @default(autoincrement())
-  method    String   @unique
+  name      String   @unique
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
