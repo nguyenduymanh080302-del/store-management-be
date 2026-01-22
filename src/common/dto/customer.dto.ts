@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
     IsDefined,
     IsInt,
@@ -11,6 +11,7 @@ import {
     IsNumber,
     Min,
     Matches,
+    ValidateIf,
 } from 'class-validator';
 
 /* ---------- PARAM DTO ---------- */
@@ -31,22 +32,22 @@ export class CreateCustomerBodyDto {
     @MaxLength(64, { message: 'message.customer.name-max-length-is-64' })
     name: string;
 
+    @Transform(({ value }) => value === '' ? null : value)
+    @ValidateIf((_, value) => value !== null)
     @IsOptional()
     @IsEmail({}, { message: 'message.customer.email-invalid' })
     @MaxLength(128, { message: 'message.customer.email-max-length-is-128' })
-    email: string;
+    email?: string;
 
     @IsOptional()
     @IsString({ message: 'message.customer.phone-must-is-string' })
-    @Matches(/^(03|05|07|08|09)\d{8}$/, {
-        message: 'message.customer.phone-invalid-vn',
-    })
-    phone: string;
+    @Matches(/^(03|05|07|08|09)\d{8}$/, { message: 'message.customer.phone-invalid-vn' })
+    phone?: string;
 
     @IsOptional()
     @IsString({ message: 'message.customer.address-must-is-string' })
     @MaxLength(255, { message: 'message.customer.address-max-length-is-255' })
-    address: string;
+    address?: string;
 
     @IsOptional()
     @Type(() => Number)

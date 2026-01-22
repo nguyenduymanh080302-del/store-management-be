@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/mapped-types";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
     IsDefined,
     IsInt,
@@ -9,6 +9,7 @@ import {
     MaxLength,
     IsOptional,
     IsBoolean,
+    ValidateIf,
 } from "class-validator";
 
 /* ---------- PARAM DTO ---------- */
@@ -29,6 +30,8 @@ export class CreateDeliveryBodyDto {
     @MaxLength(64, { message: "message.delivery.name-max-length-is-64" })
     name: string;
 
+    @Transform(({ value }) => value === '' ? null : value)
+    @ValidateIf((_, value) => value !== null)
     @IsOptional()
     @IsEmail({}, { message: "message.delivery.email-invalid" })
     @MaxLength(128, { message: "message.delivery.email-max-length-is-128" })
@@ -37,7 +40,7 @@ export class CreateDeliveryBodyDto {
     @IsOptional()
     @IsString({ message: "message.delivery.phone-must-is-string" })
     @MaxLength(20, { message: "message.delivery.phone-max-length-is-20" })
-    phone: string;
+    phone?: string;
 
     @IsOptional()
     @IsBoolean({ message: "message.delivery.is-active-must-is-boolean" })

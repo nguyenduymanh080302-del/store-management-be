@@ -168,7 +168,7 @@ model Delivery {
   id        Int      @id @default(autoincrement())
   name      String
   email     String?  @unique
-  phone     String   @unique
+  phone     String?  @unique
   debt      Float    @default(0)
   isActive  Boolean  @default(true)
   orders    Order[]
