@@ -12,6 +12,8 @@ import {
     ValidateNested,
     IsNumber,
     Min,
+    Max,
+    ArrayMinSize,
 } from "class-validator";
 
 /* ---------- PARAM DTO ---------- */
@@ -41,22 +43,19 @@ export class ProductUnitDto {
     unitId: number;
 
     @Type(() => Number)
-    @IsDefined({ message: 'message.product.unit.import-price-is-required' })
-    @IsNumber({}, { message: 'message.product.unit.import-price-must-is-number' })
-    @Min(0, { message: 'message.product.unit.import-price-min-is-0' })
-    importPrice: number;
-
-    @Type(() => Number)
     @IsDefined({ message: 'message.product.unit.sell-price-is-required' })
-    @IsNumber({}, { message: 'message.product.unit.sell-price-must-is-number' })
+    @IsNumber({ maxDecimalPlaces: 2 }, { message: 'message.product.unit.sell-price-must-is-number' })
     @Min(0, { message: 'message.product.unit.sell-price-min-is-0' })
     sellPrice: number;
 
     @Type(() => Number)
-    @IsDefined({ message: 'message.product.unit.vat-percent-is-required' })
-    @IsNumber({}, { message: 'message.product.unit.vat-percent-must-is-number' })
+    @IsNumber(
+        { maxDecimalPlaces: 2 },
+        { message: 'message.product.unit.vat-percent-must-is-number' },
+    )
     @Min(0, { message: 'message.product.unit.vat-percent-min-is-0' })
-    vatPercent: number;
+    @Max(100, { message: 'message.product.unit.vat-percent-max-is-100' })
+    vatPercent: number = 0;
 }
 
 /* ---------- BODY DTO ---------- */
@@ -90,12 +89,14 @@ export class CreateProductBodyDto {
 
     @IsOptional()
     @IsArray({ message: 'message.product.images-must-is-array' })
+    @ArrayMinSize(1, { message: 'message.product.images-min-size-is-1' })
     @ValidateNested({ each: true })
     @Type(() => ProductImageDto)
     images?: ProductImageDto[];
 
     @IsOptional()
     @IsArray({ message: 'message.product.units-must-is-array' })
+    @ArrayMinSize(1, { message: 'message.product.units-min-size-is-1' })
     @ValidateNested({ each: true })
     @Type(() => ProductUnitDto)
     units?: ProductUnitDto[];
@@ -103,6 +104,11 @@ export class CreateProductBodyDto {
 
 /* ---------- UPDATE / DELETE ---------- */
 
-export class UpdateProductBodyDto extends PartialType(CreateProductBodyDto) { }
+export class UpdateProductBodyDto extends PartialType(CreateProductBodyDto) {
+    @IsOptional()
+    @IsArray()
+    @IsInt({ each: true })
+    toDeleteImages?: string[];
+}
 export class UpdateProductParamDto extends GetProductParamDto { }
 export class DeleteProductParamDto extends GetProductParamDto { }
