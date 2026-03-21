@@ -56,6 +56,12 @@ export class ProductUnitDto {
     @Min(0, { message: 'message.product.unit.vat-percent-min-is-0' })
     @Max(100, { message: 'message.product.unit.vat-percent-max-is-100' })
     vatPercent: number = 0;
+
+    @IsOptional()
+    @IsArray()
+    @Type(() => Object)
+    @IsOptional()
+    extraPrices?: { label: string; price: number }[];
 }
 
 /* ---------- BODY DTO ---------- */
@@ -90,9 +96,8 @@ export class CreateProductBodyDto {
     @IsOptional()
     @IsArray({ message: 'message.product.images-must-is-array' })
     @ArrayMinSize(1, { message: 'message.product.images-min-size-is-1' })
-    @ValidateNested({ each: true })
-    @Type(() => ProductImageDto)
-    images?: ProductImageDto[];
+    @IsString({ each: true })
+    images?: string[];
 
     @IsOptional()
     @IsArray({ message: 'message.product.units-must-is-array' })
@@ -108,7 +113,7 @@ export class UpdateProductBodyDto extends PartialType(CreateProductBodyDto) {
     @IsOptional()
     @IsArray()
     @IsInt({ each: true })
-    toDeleteImages?: string[];
+    deleteImageIds?: number[];
 }
 export class UpdateProductParamDto extends GetProductParamDto { }
 export class DeleteProductParamDto extends GetProductParamDto { }

@@ -8,54 +8,50 @@ import {
     CreateProductBodyDto,
     UpdateProductBodyDto,
 } from 'common/dto/product.dto';
-import { GoogleDriveService } from 'src/google-drive/google-drive.service';
+import { deleteImageFromDrive, uploadImageToDrive } from 'src/middlewares/google-drive';
 
 @Injectable()
 export class ProductService {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly googleDriveService: GoogleDriveService,
     ) { }
 
     /* ---------- CREATE ---------- */
-    async createProduct(data: CreateProductBodyDto) {
-        const exists = await this.prisma.product.findUnique({
-            where: { slug: data.slug },
-        });
-
-        if (exists) {
-            throw new ConflictException('message.product.slug-duplicated');
-        }
-
-        const { images, units, ...productData } = data;
+    async createProduct(dto: CreateProductBodyDto) {
+        const { images, units, ...productData } = dto;
 
         return this.prisma.$transaction(async (tx) => {
             const product = await tx.product.create({
-                data: {
-                    ...productData,
-                    units: units
-                        ? {
-                            create: units.map((u) => ({
-                                unitId: u.unitId,
-                                sellPrice: u.sellPrice,
-                                vatPercent: u.vatPercent ?? 0,
-                            })),
-                        }
-                        : undefined,
-                },
+                data: productData,
             });
 
+            // upload images parallel
             if (images?.length) {
-                const urls = await Promise.all(
-                    images.map((img) =>
-                        this.googleDriveService.uploadBase64(img.url),
-                    ),
+                const uploaded = await Promise.all(
+                    images.map((img) => uploadImageToDrive(img))
                 );
 
-                await tx.image.createMany({
-                    data: urls.map((url) => ({
+                const imageData = uploaded
+                    .filter((id) => id)
+                    .map((id) => ({
+                        url: id as string,
                         productId: product.id,
-                        url,
+                    }));
+
+                if (imageData.length) {
+                    await tx.image.createMany({ data: imageData });
+                }
+            }
+
+            // create product units
+            if (units?.length) {
+                await tx.productUnit.createMany({
+                    data: units.map((u) => ({
+                        productId: product.id,
+                        unitId: u.unitId,
+                        sellPrice: u.sellPrice,
+                        vatPercent: u.vatPercent,
+                        extraPrices: u.extraPrices,
                     })),
                 });
             }
@@ -95,71 +91,66 @@ export class ProductService {
     }
 
     /* ---------- UPDATE ---------- */
-    async updateProduct(id: number, data: UpdateProductBodyDto) {
-        await this.findProductById(id);
-
-        const { images, toDeleteImages, units, ...productData } = data;
+    async updateProduct(productId: number, dto: UpdateProductBodyDto) {
+        const { images, deleteImageIds, units, ...productData } = dto;
 
         return this.prisma.$transaction(async (tx) => {
-            /* ---------- DELETE IMAGES (DB + CLOUD) ---------- */
-            if (toDeleteImages?.length) {
-                const imagesToDelete = await tx.image.findMany({
-                    where: {
-                        id: { in: toDeleteImages },
-                        productId: id,
-                    },
-                    select: { id: true, url: true },
+            const product = await tx.product.update({
+                where: { id: productId },
+                data: productData,
+            });
+
+            // delete images
+            if (deleteImageIds?.length) {
+                const images = await tx.image.findMany({
+                    where: { id: { in: deleteImageIds } },
                 });
 
-                // delete from Google Drive first
                 await Promise.all(
-                    imagesToDelete.map((img) =>
-                        this.googleDriveService.deleteByUrl(img.url),
-                    ),
+                    images.map((img) => deleteImageFromDrive(img.url))
                 );
 
-                // then delete from DB
                 await tx.image.deleteMany({
-                    where: {
-                        id: { in: imagesToDelete.map((i) => i.id) },
-                    },
+                    where: { id: { in: deleteImageIds } },
                 });
             }
 
-            /* ---------- ADD NEW IMAGES ---------- */
+            // upload new images
             if (images?.length) {
-                const urls = await Promise.all(
-                    images.map((img) =>
-                        this.googleDriveService.uploadBase64(img.url),
-                    ),
+                const uploaded = await Promise.all(
+                    images.map((img) => uploadImageToDrive(img))
                 );
 
-                await tx.image.createMany({
-                    data: urls.map((url) => ({
-                        productId: id,
-                        url,
+                const imageData = uploaded
+                    .filter((id) => id)
+                    .map((id) => ({
+                        url: id as string,
+                        productId,
+                    }));
+
+                if (imageData.length) {
+                    await tx.image.createMany({ data: imageData });
+                }
+            }
+
+            // update units
+            if (units) {
+                await tx.productUnit.deleteMany({
+                    where: { productId },
+                });
+
+                await tx.productUnit.createMany({
+                    data: units.map((u) => ({
+                        productId,
+                        unitId: u.unitId,
+                        sellPrice: u.sellPrice,
+                        vatPercent: u.vatPercent,
+                        extraPrices: u.extraPrices,
                     })),
                 });
             }
 
-            /* ---------- UPDATE PRODUCT ---------- */
-            return tx.product.update({
-                where: { id },
-                data: {
-                    ...productData,
-
-                    units: units
-                        ? {
-                            deleteMany: {},
-                            create: units.map((u) => ({
-                                unitId: u.unitId,
-                                sellPrice: u.sellPrice,
-                                vatPercent: u.vatPercent ?? 0,
-                            })),
-                        }
-                        : undefined,
-                },
-            });
+            return product;
         });
     }
 
@@ -177,7 +168,7 @@ export class ProductService {
         // delete images from Google Drive
         await Promise.all(
             product.images.map((img) =>
-                this.googleDriveService.deleteByUrl(img.url),
+                deleteImageFromDrive(img.url),
             ),
         );
 

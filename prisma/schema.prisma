@@ -8,20 +8,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum OrderStatus {
-  PENDING
-  CANCELED
-  PREPARING
-  DELIVERING
-  DONE
-}
-
-enum ImportStatus {
-  PENDING
-  CANCELED
-  DONE
-}
-
 model Role {
   id          Int       @id @default(autoincrement())
   code        String    @unique
@@ -75,22 +61,22 @@ model Warehouse {
   updatedAt DateTime           @updatedAt
   address   String?
   accounts  Account[]
-  products  WarehouseProduct[]
   imports   Import[]
+  products  WarehouseProduct[]
 }
 
 model Product {
   id          Int           @id @default(autoincrement())
   name        String
   slug        String        @unique
-  images      Image[]
   description String
   categoryId  Int
-  category    Category      @relation(fields: [categoryId], references: [id])
-  units       ProductUnit[]
+  isActive    Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  isActive    Boolean       @default(true)
+  images      Image[]
+  category    Category      @relation(fields: [categoryId], references: [id])
+  units       ProductUnit[]
 }
 
 model Category {
@@ -107,9 +93,9 @@ model Image {
   id        Int      @id @default(autoincrement())
   url       String   @unique
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
 }
 
 model Unit {
@@ -125,14 +111,15 @@ model ProductUnit {
   productId         Int
   unitId            Int
   sellPrice         Float
+  extraPrices       Json? //Extra prices for select attibute: {label: "Có ngăn kéo", price: 200000}
   vatPercent        Float
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  importItems       ImportItem[]
+  orderProducts     OrderProduct[]
   product           Product            @relation(fields: [productId], references: [id])
   unit              Unit               @relation(fields: [unitId], references: [id])
   warehouseProducts WarehouseProduct[]
-  importItems       ImportItem[]
-  orderProducts     OrderProduct[]
 
   @@id([productId, unitId])
 }
@@ -140,8 +127,8 @@ model ProductUnit {
 model WarehouseProduct {
   warehouseId Int
   productId   Int
-  unitId      Int
   quantity    Int         @default(0)
+  unitId      Int
   product     ProductUnit @relation(fields: [productId, unitId], references: [productId, unitId])
   warehouse   Warehouse   @relation(fields: [warehouseId], references: [id])
 
@@ -179,13 +166,13 @@ model Import {
   id          Int          @id @default(autoincrement())
   supplierId  Int
   warehouseId Int
-  importItems ImportItem[]
   totalAmount Float        @default(0)
-  supplier    Supplier     @relation(fields: [supplierId], references: [id])
-  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
-  status      ImportStatus @default(PENDING)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  status      ImportStatus @default(PENDING)
+  supplier    Supplier     @relation(fields: [supplierId], references: [id])
+  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
+  importItems ImportItem[]
 
   @@index([supplierId])
   @@index([warehouseId])
@@ -193,17 +180,14 @@ model Import {
 }
 
 model ImportItem {
-  importId  Int
-  productId Int
-  unitId    Int
-
+  importId    Int
+  productId   Int
+  unitId      Int
   quantity    Int
   importPrice Float
-
+  createdAt   DateTime    @default(now())
   import      Import      @relation(fields: [importId], references: [id])
   productUnit ProductUnit @relation(fields: [productId, unitId], references: [productId, unitId])
-
-  createdAt DateTime @default(now())
 
   @@id([importId, productId, unitId])
   @@index([productId, unitId])
@@ -214,11 +198,11 @@ model Delivery {
   name      String
   email     String?  @unique
   phone     String?  @unique
-  debt      Float    @default(0)
   isActive  Boolean  @default(true)
-  orders    Order[]
   createdAt DateTime @default(now())
+  debt      Float    @default(0)
   updatedAt DateTime @updatedAt
+  orders    Order[]
 }
 
 model Order {
@@ -230,25 +214,25 @@ model Order {
   customerPhone   String
   customerAddress String
   customerPayment Float
-  deliveryPerson  String?
-  deliveryPhone   String?
-  totalAmount     Float
+  paymentMethodId Int
   vatValue        Float
   discountValue   Float?         @default(0)
+  totalAmount     Float
   toPayAmount     Float
-  paidAmount      Float?         @default(0)
-  creatorId       Int
-  warehouseId     Int
-  deliveryId      Int?
-  paymentMethodId Int
-  createdBy       Account        @relation(fields: [creatorId], references: [id])
-  delivery        Delivery?      @relation(fields: [deliveryId], references: [id])
-  customer        Customer?      @relation(fields: [customerId], references: [id])
-  paymentMethod   PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
-  products        OrderProduct[]
   status          OrderStatus    @default(PENDING)
+  creatorId       Int
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  deliveryId      Int?
+  warehouseId     Int
+  deliveryPerson  String?
+  deliveryPhone   String?
+  paidAmount      Float?         @default(0)
+  createdBy       Account        @relation(fields: [creatorId], references: [id])
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+  delivery        Delivery?      @relation(fields: [deliveryId], references: [id])
+  paymentMethod   PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  products        OrderProduct[]
 
   @@index([createdAt])
   @@index([status])
@@ -258,20 +242,18 @@ model Order {
 }
 
 model OrderProduct {
-  id        Int @id @default(autoincrement())
-  orderId   Int
-  productId Int
-  unitId    Int
-
-  quantity   Int
-  sellPrice  Float
-  vatPercent Float
-
+  id          Int         @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  quantity    Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  sellPrice   Float
+  extraPrice  Float
+  unitId      Int
+  vatPercent  Float
   order       Order       @relation(fields: [orderId], references: [id])
   productUnit ProductUnit @relation(fields: [productId, unitId], references: [productId, unitId])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([orderId])
   @@index([productId, unitId])
@@ -279,9 +261,23 @@ model OrderProduct {
 
 model PaymentMethod {
   id        Int      @id @default(autoincrement())
-  name      String   @unique
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  name      String   @unique
   orders    Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  CANCELED
+  PREPARING
+  DELIVERING
+  DONE
+}
+
+enum ImportStatus {
+  PENDING
+  CANCELED
+  DONE
 }
