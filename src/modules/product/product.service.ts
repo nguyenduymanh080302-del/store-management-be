@@ -1,23 +1,41 @@
 import {
-    ConflictException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
     CreateProductBodyDto,
+    GetProductsQueryDto,
     UpdateProductBodyDto,
 } from 'common/dto/product.dto';
-import { deleteImageFromDrive, uploadImageToDrive } from 'src/middlewares/google-drive';
+import { ImageService } from './image.service';
+
+type UploadedProductFile = {
+    buffer: Buffer;
+    mimetype?: string;
+    originalname?: string;
+};
 
 @Injectable()
 export class ProductService {
     constructor(
         private readonly prisma: PrismaService,
+        private readonly imageService: ImageService,
     ) { }
 
+    private readonly productInclude = {
+        images: true,
+        units: {
+            include: { unit: true },
+        },
+        category: true,
+    };
+
     /* ---------- CREATE ---------- */
-    async createProduct(dto: CreateProductBodyDto) {
+    async createProduct(
+        dto: CreateProductBodyDto,
+        imageFiles: UploadedProductFile[] = [],
+    ) {
         const { images, units, ...productData } = dto;
 
         return this.prisma.$transaction(async (tx) => {
@@ -25,25 +43,19 @@ export class ProductService {
                 data: productData,
             });
 
-            // upload images parallel
-            if (images?.length) {
-                const uploaded = await Promise.all(
-                    images.map((img) => uploadImageToDrive(img))
+            const uploadedUrls = await this.imageService.uploadImages(
+                imageFiles,
+                images,
+            );
+
+            if (uploadedUrls.length) {
+                await this.imageService.createProductImages(
+                    product.id,
+                    uploadedUrls,
+                    tx,
                 );
-
-                const imageData = uploaded
-                    .filter((id) => id)
-                    .map((id) => ({
-                        url: id as string,
-                        productId: product.id,
-                    }));
-
-                if (imageData.length) {
-                    await tx.image.createMany({ data: imageData });
-                }
             }
 
-            // create product units
             if (units?.length) {
                 await tx.productUnit.createMany({
                     data: units.map((u) => ({
@@ -56,31 +68,70 @@ export class ProductService {
                 });
             }
 
-            return product;
+            return tx.product.findUnique({
+                where: { id: product.id },
+                include: this.productInclude,
+            });
         });
     }
 
     /* ---------- READ ALL ---------- */
-    async findAllProduct() {
-        return this.prisma.product.findMany({
-            include: {
-                images: true,
-                units: true,
-                category: true,
+    async findAllProduct(query: GetProductsQueryDto) {
+        const trimmedSearch = query.search?.trim();
+        const { page = 1, limit = 10 } = query;
+        const skip = (page - 1) * limit;
+        const where = trimmedSearch
+            ? {
+                OR: [
+                    {
+                        name: {
+                            contains: trimmedSearch,
+                            mode: 'insensitive' as const,
+                        },
+                    },
+                    {
+                        slug: {
+                            contains: trimmedSearch,
+                            mode: 'insensitive' as const,
+                        },
+                    },
+                    {
+                        description: {
+                            contains: trimmedSearch,
+                            mode: 'insensitive' as const,
+                        },
+                    },
+                ],
+            }
+            : {};
+
+        const [items, total] = await this.prisma.$transaction([
+            this.prisma.product.findMany({
+                where,
+                include: this.productInclude,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            this.prisma.product.count({ where }),
+        ]);
+
+        return {
+            items,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: total === 0 ? 0 : Math.ceil(total / limit),
             },
-            orderBy: { createdAt: 'desc' },
-        });
+        };
     }
 
     /* ---------- READ ONE ---------- */
     async findProductById(id: number) {
         const product = await this.prisma.product.findUnique({
             where: { id },
-            include: {
-                images: true,
-                units: true,
-                category: true,
-            },
+            include: this.productInclude,
         });
 
         if (!product) {
@@ -91,49 +142,36 @@ export class ProductService {
     }
 
     /* ---------- UPDATE ---------- */
-    async updateProduct(productId: number, dto: UpdateProductBodyDto) {
+    async updateProduct(
+        productId: number,
+        dto: UpdateProductBodyDto,
+        imageFiles: UploadedProductFile[] = [],
+    ) {
         const { images, deleteImageIds, units, ...productData } = dto;
 
         return this.prisma.$transaction(async (tx) => {
-            const product = await tx.product.update({
+            await tx.product.update({
                 where: { id: productId },
                 data: productData,
             });
 
-            // delete images
             if (deleteImageIds?.length) {
-                const images = await tx.image.findMany({
-                    where: { id: { in: deleteImageIds } },
-                });
-
-                await Promise.all(
-                    images.map((img) => deleteImageFromDrive(img.url))
-                );
-
-                await tx.image.deleteMany({
-                    where: { id: { in: deleteImageIds } },
-                });
+                await this.imageService.deleteImagesByIds(deleteImageIds);
             }
 
-            // upload new images
-            if (images?.length) {
-                const uploaded = await Promise.all(
-                    images.map((img) => uploadImageToDrive(img))
+            const uploadedUrls = await this.imageService.uploadImages(
+                imageFiles,
+                images,
+            );
+
+            if (uploadedUrls.length) {
+                await this.imageService.createProductImages(
+                    productId,
+                    uploadedUrls,
+                    tx,
                 );
-
-                const imageData = uploaded
-                    .filter((id) => id)
-                    .map((id) => ({
-                        url: id as string,
-                        productId,
-                    }));
-
-                if (imageData.length) {
-                    await tx.image.createMany({ data: imageData });
-                }
             }
 
-            // update units
             if (units) {
                 await tx.productUnit.deleteMany({
                     where: { productId },
@@ -150,7 +188,10 @@ export class ProductService {
                 });
             }
 
-            return product;
+            return tx.product.findUnique({
+                where: { id: productId },
+                include: this.productInclude,
+            });
         });
     }
 
@@ -165,17 +206,12 @@ export class ProductService {
             throw new NotFoundException('message.product.not-found');
         }
 
-        // delete images from Google Drive
-        await Promise.all(
-            product.images.map((img) =>
-                deleteImageFromDrive(img.url),
-            ),
+        await this.imageService.deleteImagesByUrls(
+            product.images.map((img) => img.url),
         );
 
-        // delete product (cascade images in DB)
         return this.prisma.product.delete({
             where: { id },
         });
     }
-
 }

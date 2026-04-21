@@ -117,3 +117,24 @@ export class UpdateProductBodyDto extends PartialType(CreateProductBodyDto) {
 }
 export class UpdateProductParamDto extends GetProductParamDto { }
 export class DeleteProductParamDto extends GetProductParamDto { }
+
+/* ---------- QUERY DTO ---------- */
+
+export class GetProductsQueryDto {
+    @IsOptional()
+    @IsString({ message: 'message.product.search-must-is-string' })
+    search?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt({ message: 'message.product.page-must-is-number' })
+    @Min(1, { message: 'message.product.page-min-is-1' })
+    page: number = 1;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt({ message: 'message.product.limit-must-is-number' })
+    @Min(1, { message: 'message.product.limit-min-is-1' })
+    @Max(100, { message: 'message.product.limit-max-is-100' })
+    limit: number = 10;
+}

@@ -210,7 +210,7 @@ model Order {
   orderCode       String         @unique
   customerId      Int?
   customerName    String
-  customerEmail   String
+  customerEmail   String?
   customerPhone   String
   customerAddress String
   customerPayment Float
@@ -224,7 +224,7 @@ model Order {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deliveryId      Int?
-  warehouseId     Int
+  warehouseId     Int?
   deliveryPerson  String?
   deliveryPhone   String?
   paidAmount      Float?         @default(0)
