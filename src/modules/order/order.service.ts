@@ -31,7 +31,6 @@ export class OrderService {
         },
         customer: true,
         delivery: true,
-        paymentMethod: true,
         products: {
             include: {
                 productUnit: {
@@ -51,19 +50,17 @@ export class OrderService {
     };
 
     private async validateRelations(
-        paymentMethodId: number,
-        warehouseId: number,
+        warehouseId?: number,
         customerId?: number,
         deliveryId?: number,
     ) {
-        const [paymentMethod, warehouse, customer, delivery] =
+        const [warehouse, customer, delivery] =
             await Promise.all([
-                this.prisma.paymentMethod.findUnique({
-                    where: { id: paymentMethodId },
-                }),
-                this.prisma.warehouse.findUnique({
-                    where: { id: warehouseId },
-                }),
+                warehouseId
+                    ? this.prisma.warehouse.findUnique({
+                        where: { id: warehouseId },
+                    })
+                    : Promise.resolve(null),
                 customerId
                     ? this.prisma.customer.findUnique({
                         where: { id: customerId },
@@ -76,28 +73,16 @@ export class OrderService {
                     : Promise.resolve(null),
             ]);
 
-        if (!paymentMethod) {
-            throw new NotFoundException(
-                'message.order.payment-method-not-found',
-            );
-        }
-
-        if (!warehouse) {
-            throw new NotFoundException(
-                'message.order.warehouse-not-found',
-            );
+        if (warehouseId && !warehouse) {
+            throw new NotFoundException('message.order.warehouse-not-found');
         }
 
         if (customerId && !customer) {
-            throw new NotFoundException(
-                'message.order.customer-not-found',
-            );
+            throw new NotFoundException('message.order.customer-not-found');
         }
 
         if (deliveryId && !delivery) {
-            throw new NotFoundException(
-                'message.order.delivery-not-found',
-            );
+            throw new NotFoundException('message.order.delivery-not-found');
         }
     }
 
@@ -157,7 +142,6 @@ export class OrderService {
             products,
             customerId,
             deliveryId,
-            paymentMethodId,
             warehouseId,
             ...orderData
         } = dto;
@@ -173,7 +157,6 @@ export class OrderService {
         }
 
         await this.validateRelations(
-            paymentMethodId,
             warehouseId,
             customerId,
             deliveryId,
@@ -185,9 +168,8 @@ export class OrderService {
                 ...orderData,
                 customerId,
                 deliveryId,
-                paymentMethodId,
-                warehouseId,
                 creatorId,
+                ...(warehouseId !== undefined && { warehouseId }),
                 products: {
                     create: this.buildOrderProducts(products),
                 },
@@ -273,7 +255,6 @@ export class OrderService {
             products,
             customerId,
             deliveryId,
-            paymentMethodId,
             warehouseId,
             ...orderData
         } = dto;
@@ -294,7 +275,6 @@ export class OrderService {
         }
 
         if (
-            paymentMethodId !== undefined ||
             warehouseId !== undefined ||
             customerId !== undefined ||
             deliveryId !== undefined
@@ -302,7 +282,6 @@ export class OrderService {
             const currentOrder = await this.prisma.order.findUnique({
                 where: { id },
                 select: {
-                    paymentMethodId: true,
                     warehouseId: true,
                     customerId: true,
                     deliveryId: true,
@@ -314,8 +293,9 @@ export class OrderService {
             }
 
             await this.validateRelations(
-                paymentMethodId ?? currentOrder.paymentMethodId,
-                warehouseId ?? currentOrder.warehouseId,
+                warehouseId === undefined
+                    ? currentOrder.warehouseId ?? undefined
+                    : warehouseId,
                 customerId === undefined
                     ? currentOrder.customerId ?? undefined
                     : customerId,
@@ -336,9 +316,6 @@ export class OrderService {
                     ...orderData,
                     ...(customerId !== undefined ? { customerId } : {}),
                     ...(deliveryId !== undefined ? { deliveryId } : {}),
-                    ...(paymentMethodId !== undefined
-                        ? { paymentMethodId }
-                        : {}),
                     ...(warehouseId !== undefined ? { warehouseId } : {}),
                 },
             });

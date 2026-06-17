@@ -93,11 +93,10 @@ export class CreateOrderBodyDto {
     @MaxLength(128, { message: 'message.order.customer-name-max-length-is-128' })
     customerName: string;
 
-    @IsDefined({ message: 'message.order.customer-email-is-required' })
+    @IsOptional()
     @IsString({ message: 'message.order.customer-email-must-is-string' })
-    @IsNotEmpty({ message: 'message.order.customer-email-not-empty' })
     @MaxLength(128, { message: 'message.order.customer-email-max-length-is-128' })
-    customerEmail: string;
+    customerEmail?: string;
 
     @IsDefined({ message: 'message.order.customer-phone-is-required' })
     @IsString({ message: 'message.order.customer-phone-must-is-string' })
@@ -117,11 +116,6 @@ export class CreateOrderBodyDto {
     @IsNumber({}, { message: 'message.order.customer-payment-must-is-number' })
     @Min(0, { message: 'message.order.customer-payment-min-is-0' })
     customerPayment: number;
-
-    @Type(() => Number)
-    @IsDefined({ message: 'message.order.payment-method-id-is-required' })
-    @IsInt({ message: 'message.order.payment-method-id-must-is-number' })
-    paymentMethodId: number;
 
     @Type(() => Number)
     @IsDefined({ message: 'message.order.vat-value-is-required' })
@@ -156,10 +150,10 @@ export class CreateOrderBodyDto {
     @IsInt({ message: 'message.order.delivery-id-must-is-number' })
     deliveryId?: number;
 
+    @IsOptional()
     @Type(() => Number)
-    @IsDefined({ message: 'message.order.warehouse-id-is-required' })
     @IsInt({ message: 'message.order.warehouse-id-must-is-number' })
-    warehouseId: number;
+    warehouseId?: number;
 
     @IsOptional()
     @IsString({ message: 'message.order.delivery-person-must-is-string' })

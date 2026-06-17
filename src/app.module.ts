@@ -10,7 +10,6 @@ import { SupplierModule } from 'modules/supplier/supplier.module';
 import { CustomerModule } from 'modules/customer/customer.module';
 import { DeliveryModule } from 'modules/delivery/delivery.module';
 import { RoleModule } from 'modules/role/role.module';
-import { PaymentMethodModule } from 'modules/paymentMethod/payment-method.module';
 import { ProductModule } from 'modules/product/product.module';
 
 @Module({
@@ -29,7 +28,6 @@ import { ProductModule } from 'modules/product/product.module';
     CustomerModule,
     DeliveryModule,
     RoleModule,
-    PaymentMethodModule,
     ProductModule,
   ]
 })
