@@ -1,10 +1,14 @@
+import compression from 'compression';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, HttpStatus, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  app.setGlobalPrefix("api/v1")
+  app.enableShutdownHooks();
+  app.use(compression());
+  app.setGlobalPrefix('api/v1');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,6 +29,7 @@ async function bootstrap() {
       },
     }),
   );
+
   const port = process.env.PORT || 3000;
   console.log(`Server is running on http://localhost:${port}/api/v1`);
   await app.listen(port);

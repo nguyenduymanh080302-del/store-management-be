@@ -20,7 +20,6 @@ import {
 const ORDER_STATUS = [
     'PENDING',
     'CANCELED',
-    'PREPARING',
     'DELIVERING',
     'DONE',
 ] as const;
@@ -134,12 +133,6 @@ export class CreateOrderBodyDto {
     @IsNumber({}, { message: 'message.order.total-amount-must-is-number' })
     @Min(0, { message: 'message.order.total-amount-min-is-0' })
     totalAmount: number;
-
-    @Type(() => Number)
-    @IsDefined({ message: 'message.order.to-pay-amount-is-required' })
-    @IsNumber({}, { message: 'message.order.to-pay-amount-must-is-number' })
-    @Min(0, { message: 'message.order.to-pay-amount-min-is-0' })
-    toPayAmount: number;
 
     @IsOptional()
     @IsIn(ORDER_STATUS, { message: 'message.order.status-invalid' })

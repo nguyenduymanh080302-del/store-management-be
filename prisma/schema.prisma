@@ -208,16 +208,16 @@ model Delivery {
 model Order {
   id              Int            @id @default(autoincrement())
   orderCode       String         @unique
-  customerId      Int?
+  customerId      Int?                              // customerId can be null if retail customer, else count to debt of customer
   customerName    String
   customerEmail   String?
   customerPhone   String
   customerAddress String
   customerPayment Float
-  vatValue        Float
-  discountValue   Float?         @default(0)
-  totalAmount     Float
-  toPayAmount     Float
+  vatValue        Float          @default(0)        // VAT value in money
+  discountValue   Float?         @default(0)        // discount value in money
+  totalAmount     Float                             // total amount after discount and before VAT
+  paidAmount      Float?         @default(0)        // paid amount by customer
   status          OrderStatus    @default(PENDING)
   creatorId       Int
   createdAt       DateTime       @default(now())
@@ -226,7 +226,6 @@ model Order {
   warehouseId     Int?
   deliveryPerson  String?
   deliveryPhone   String?
-  paidAmount      Float?         @default(0)
   createdBy       Account        @relation(fields: [creatorId], references: [id])
   customer        Customer?      @relation(fields: [customerId], references: [id])
   delivery        Delivery?      @relation(fields: [deliveryId], references: [id])
@@ -260,7 +259,6 @@ model OrderProduct {
 enum OrderStatus {
   PENDING
   CANCELED
-  PREPARING
   DELIVERING
   DONE
 }

@@ -101,22 +101,16 @@ export class OrderService {
             productKeys.add(key);
         }
 
-        const productUnits = await this.prisma.$transaction(
-            products.map((item) =>
-                this.prisma.productUnit.findUnique({
-                    where: {
-                        productId_unitId: {
-                            productId: item.productId,
-                            unitId: item.unitId,
-                        },
-                    },
-                }),
-            ),
-        );
+        const productUnits = await this.prisma.productUnit.findMany({
+            where: {
+                OR: products.map((item) => ({
+                    productId: item.productId,
+                    unitId: item.unitId,
+                })),
+            },
+        });
 
-        const missingItem = productUnits.findIndex((productUnit) => !productUnit);
-
-        if (missingItem !== -1) {
+        if (productUnits.length !== products.length) {
             throw new NotFoundException(
                 'message.order.product-not-found',
             );
