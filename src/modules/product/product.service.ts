@@ -64,6 +64,7 @@ export class ProductService {
                     data: units.map((u) => ({
                         productId: product.id,
                         unitId: u.unitId,
+                        importPrice: u.importPrice ?? 0,
                         sellPrice: u.sellPrice,
                         vatPercent: u.vatPercent,
                         extraPrices: u.extraPrices,
@@ -264,6 +265,7 @@ export class ProductService {
                                     },
                                 },
                                 data: {
+                                    importPrice: unit.importPrice ?? 0,
                                     sellPrice: unit.sellPrice,
                                     vatPercent: unit.vatPercent,
                                     extraPrices: unit.extraPrices,
@@ -274,6 +276,7 @@ export class ProductService {
                         createManyData.push({
                             productId,
                             unitId: unit.unitId,
+                            importPrice: unit.importPrice ?? 0,
                             sellPrice: unit.sellPrice,
                             vatPercent: unit.vatPercent,
                             extraPrices: unit.extraPrices,

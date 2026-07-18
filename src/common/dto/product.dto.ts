@@ -43,6 +43,12 @@ export class ProductUnitDto {
     unitId: number;
 
     @Type(() => Number)
+    @IsOptional()
+    @IsNumber({ maxDecimalPlaces: 2 }, { message: 'message.product.unit.import-price-must-is-number' })
+    @Min(0, { message: 'message.product.unit.import-price-min-is-0' })
+    importPrice?: number;
+
+    @Type(() => Number)
     @IsDefined({ message: 'message.product.unit.sell-price-is-required' })
     @IsNumber({ maxDecimalPlaces: 2 }, { message: 'message.product.unit.sell-price-must-is-number' })
     @Min(0, { message: 'message.product.unit.sell-price-min-is-0' })
