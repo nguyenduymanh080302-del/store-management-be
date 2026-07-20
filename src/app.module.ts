@@ -12,6 +12,7 @@ import { DeliveryModule } from 'modules/delivery/delivery.module';
 import { RoleModule } from 'modules/role/role.module';
 import { ProductModule } from 'modules/product/product.module';
 import { WarehouseModule } from 'modules/warehouse/warehouse.module';
+import { ImportModule } from 'modules/import/import.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { WarehouseModule } from 'modules/warehouse/warehouse.module';
     RoleModule,
     ProductModule,
     WarehouseModule,
+    ImportModule,
   ]
 })
 export class AppModule { }

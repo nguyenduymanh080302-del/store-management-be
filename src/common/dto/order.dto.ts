@@ -37,6 +37,11 @@ export class GetOrderParamDto {
 
 export class OrderProductItemDto {
     @Type(() => Number)
+    @IsDefined({ message: 'message.order.warehouse-id-is-required' })
+    @IsInt({ message: 'message.order.warehouse-id-must-is-number' })
+    warehouseId: number;
+
+    @Type(() => Number)
     @IsDefined({ message: 'message.order.product.product-id-is-required' })
     @IsInt({ message: 'message.order.product.product-id-must-is-number' })
     productId: number;
@@ -142,11 +147,6 @@ export class CreateOrderBodyDto {
     @Type(() => Number)
     @IsInt({ message: 'message.order.delivery-id-must-is-number' })
     deliveryId?: number;
-
-    @IsOptional()
-    @Type(() => Number)
-    @IsInt({ message: 'message.order.warehouse-id-must-is-number' })
-    warehouseId?: number;
 
     @IsOptional()
     @IsString({ message: 'message.order.delivery-person-must-is-string' })

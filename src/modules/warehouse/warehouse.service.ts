@@ -27,6 +27,15 @@ export class WarehouseService {
 
     async findAllWarehouse() {
         return this.prisma.warehouse.findMany({
+            include: {
+                products: {
+                    select: {
+                        productId: true,
+                        unitId: true,
+                        quantity: true,
+                    },
+                },
+            },
             orderBy: { name: 'asc' },
         });
     }
