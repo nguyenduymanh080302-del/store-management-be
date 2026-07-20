@@ -30,7 +30,7 @@ async function bootstrap() {
     }),
   );
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 9999;
   console.log(`Server is running on http://localhost:${port}/api/v1`);
   await app.listen(port);
 }
