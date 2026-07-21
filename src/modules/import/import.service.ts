@@ -4,8 +4,21 @@ import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class ImportService {
+    /**
+     * Constructs the ImportService instance.
+     *
+     * @param prisma Database service instance for Prisma ORM.
+     */
     constructor(private readonly prisma: PrismaService) { }
 
+    /**
+     * Creates a new stock import transaction, updates warehouse product inventory, and creates import records.
+     *
+     * @param dto DTO containing import details including warehouseId, supplierId, and array of imported products with quantities.
+     * @returns The created import record with its items.
+     * @throws BadRequestException If duplicate product-unit combinations are passed in the import payload.
+     * @throws NotFoundException If the specified warehouse, supplier, or product-unit combination is not found.
+     */
     async createImport(dto: CreateImportBodyDto) {
         const keys = new Set<string>();
         for (const item of dto.products) {

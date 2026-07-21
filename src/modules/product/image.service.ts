@@ -13,12 +13,21 @@ type UploadedProductFile = {
 
 @Injectable()
 export class ImageService {
+    /**
+     * Constructs the ImageService instance.
+     *
+     * @param prisma Database service instance for Prisma ORM.
+     */
     constructor(
         private readonly prisma: PrismaService,
     ) { }
 
     /**
-     * Upload images to Cloudinary and return the hosted image URLs.
+     * Uploads file buffers and base64 strings to Cloudinary and returns hosted image URLs.
+     *
+     * @param imageFiles Array of uploaded file objects containing buffer, mimetype, and originalname.
+     * @param base64Images Array of base64-encoded image strings to upload.
+     * @returns Array of uploaded image URLs.
      */
     async uploadImages(
         imageFiles: UploadedProductFile[] = [],
@@ -39,7 +48,9 @@ export class ImageService {
     }
 
     /**
-     * Delete images from Cloudinary by their database IDs.
+     * Deletes images from Cloudinary and removes their database records by image IDs.
+     *
+     * @param imageIds Array of database image IDs to delete.
      */
     async deleteImagesByIds(imageIds: number[]): Promise<void> {
         if (!imageIds.length) return;
@@ -58,7 +69,9 @@ export class ImageService {
     }
 
     /**
-     * Delete images from Cloudinary by their URLs.
+     * Deletes images from Cloudinary by their hosted URLs.
+     *
+     * @param urls Array of Cloudinary image URLs to delete.
      */
     async deleteImagesByUrls(urls: string[]): Promise<void> {
         if (!urls.length) return;
@@ -69,7 +82,11 @@ export class ImageService {
     }
 
     /**
-     * Create image records in database for a product
+     * Creates database image records associated with a product.
+     *
+     * @param productId The ID of the product the images belong to.
+     * @param imageUrls Array of image URLs to save in database.
+     * @param prisma Optional Prisma client or transaction instance.
      */
     async createProductImages(
         productId: number,

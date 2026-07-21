@@ -7,16 +7,32 @@ import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class SessionService {
+    /**
+     * Constructs the SessionService instance.
+     *
+     * @param prisma Database service instance for Prisma ORM.
+     */
     constructor(private prisma: PrismaService) { }
 
-    // ---------------- GET SESSION ----------------
+    /**
+     * Retrieves a session by its unique ID.
+     *
+     * @param sessionId The unique identifier of the session.
+     * @returns The session entity or null if not found.
+     */
     async getSessionById(sessionId: number) {
         return this.prisma.session.findUnique({
             where: { id: sessionId },
         });
     }
 
-    // ---------------- CREATE EMPTY SESSION ----------------
+    /**
+     * Creates a new session record with user agent, IP address, and 30-day absolute expiration date.
+     *
+     * @param accountId ID of the account starting the session.
+     * @param req Express Request object containing HTTP headers (user-agent) and IP address.
+     * @returns The created session entity.
+     */
     async createEmptySession(accountId: number, req: Request) {
         return this.prisma.session.create({
             data: {
@@ -31,7 +47,13 @@ export class SessionService {
         });
     }
 
-    // ---------------- ATTACH / ROTATE REFRESH TOKEN ----------------
+    /**
+     * Hashes and attaches/rotates a refresh token for an active session.
+     *
+     * @param sessionId ID of the session to update.
+     * @param refreshToken Raw refresh token string to be hashed and saved.
+     * @returns The updated session entity.
+     */
     async attachRefreshToken(sessionId: number, refreshToken: string) {
         return this.prisma.session.update({
             where: { id: sessionId },
@@ -42,7 +64,14 @@ export class SessionService {
         });
     }
 
-    // ---------------- VALIDATE SESSION FOR REFRESH ----------------
+    /**
+     * Validates session state, checking absolute expiration, 10-day idle timeout, and refresh token match.
+     *
+     * @param sessionId Unique ID of the session.
+     * @param refreshToken Refresh token string provided by client.
+     * @returns The valid session entity.
+     * @throws UnauthorizedException If session is revoked, expired, idle-timed-out, or refresh token is reused/invalid.
+     */
     async validateSessionForRefresh(
         sessionId: number,
         refreshToken: string,
@@ -83,7 +112,11 @@ export class SessionService {
         return session;
     }
 
-    // ---------------- REVOKE SESSION ----------------
+    /**
+     * Marks a session as revoked.
+     *
+     * @param sessionId Unique ID of the session to revoke.
+     */
     async revokeSession(sessionId: number) {
         await this.prisma.session.update({
             where: { id: sessionId },
@@ -91,8 +124,9 @@ export class SessionService {
         });
     }
 
-    // ---------------- CLEANUP JOB ----------------
-    // chạy mỗi ngày 03:00 sáng
+    /**
+     * Scheduled cron job running daily at 03:00 AM to remove revoked, absolute expired, and idle timed-out sessions.
+     */
     @Cron('0 3 * * *')
     async cleanupSessions() {
         const now = new Date();

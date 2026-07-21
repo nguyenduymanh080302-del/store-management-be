@@ -27,9 +27,19 @@ import { Permission } from 'utils/enum';
 
 @Controller('role')
 export class RoleController {
+    /**
+     * Constructs the RoleController instance.
+     *
+     * @param roleService Service handling user role and permission management logic.
+     */
     constructor(private readonly roleService: RoleService) { }
 
-    /* ---------- CREATE ---------- */
+    /**
+     * Endpoint to create a new user role with permissions. Requires MANAGE_ACCOUNT permission.
+     *
+     * @param data DTO payload containing role creation attributes (code, name, permissions).
+     * @returns ApiResponse containing created role entity.
+     */
     @UseGuards(JwtAccessGuard, PermissionGuard)
     @Permissions(Permission.MANAGE_ACCOUNT)
     @Post()
@@ -45,7 +55,11 @@ export class RoleController {
         };
     }
 
-    /* ---------- READ ALL ---------- */
+    /**
+     * Endpoint to retrieve all active user roles.
+     *
+     * @returns ApiResponse containing list of active role entities.
+     */
     @Get()
     async findAllRole(): Promise<ApiResponse<RoleEntity[]>> {
         const result = await this.roleService.findAllRole();
@@ -57,7 +71,12 @@ export class RoleController {
         };
     }
 
-    /* ---------- READ ONE ---------- */
+    /**
+     * Endpoint to find a role by ID.
+     *
+     * @param params DTO containing role ID path parameter.
+     * @returns ApiResponse containing role entity.
+     */
     @Get(':id')
     async findRoleById(
         @Param() params: GetRoleParamDto,
@@ -71,7 +90,14 @@ export class RoleController {
         };
     }
 
-    /* ---------- UPDATE ---------- */
+    /**
+     * Endpoint to update an existing role by ID. Requires MANAGE_ACCOUNT permission.
+     *
+     * @param params DTO containing role ID path parameter.
+     * @param data DTO payload containing updated role attributes.
+     * @returns ApiResponse containing updated role entity.
+     * @throws BadRequestException If update payload is empty.
+     */
     @UseGuards(JwtAccessGuard, PermissionGuard)
     @Permissions(Permission.MANAGE_ACCOUNT)
     @Patch(':id')
@@ -97,7 +123,12 @@ export class RoleController {
         };
     }
 
-    /* ---------- DELETE ---------- */
+    /**
+     * Endpoint to soft-delete a role by ID. Requires MANAGE_ACCOUNT permission.
+     *
+     * @param params DTO containing role ID path parameter.
+     * @returns ApiResponse indicating role deletion success.
+     */
     @UseGuards(JwtAccessGuard, PermissionGuard)
     @Permissions(Permission.MANAGE_ACCOUNT)
     @Delete(':id')

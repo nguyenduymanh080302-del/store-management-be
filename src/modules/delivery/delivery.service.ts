@@ -11,9 +11,20 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class DeliveryService {
+    /**
+     * Constructs the DeliveryService instance.
+     *
+     * @param prisma Database service instance for Prisma ORM.
+     */
     constructor(private readonly prisma: PrismaService) { }
 
-    // CREATE
+    /**
+     * Creates a new delivery partner/unit record after verifying phone uniqueness.
+     *
+     * @param data DTO containing delivery entity details (name, phone, address, etc.).
+     * @returns The created delivery entity.
+     * @throws ConflictException If a delivery partner with the given phone number already exists.
+     */
     async createDelivery(data: CreateDeliveryBodyDto) {
         if (data.phone) {
             const exists = await this.prisma.delivery.findUnique({
@@ -30,14 +41,24 @@ export class DeliveryService {
         });
     }
 
-    // READ ALL
+    /**
+     * Retrieves all delivery entities sorted by name in descending order.
+     *
+     * @returns List of all delivery records.
+     */
     async findAllDelivery() {
         return this.prisma.delivery.findMany({
             orderBy: { name: 'desc' },
         });
     }
 
-    // READ ONE
+    /**
+     * Finds a delivery partner by ID.
+     *
+     * @param id The unique identifier of the delivery entity.
+     * @returns The delivery record if found.
+     * @throws NotFoundException If no delivery record is found with the given ID.
+     */
     async findDeliveryById(id: number) {
         const delivery = await this.prisma.delivery.findUnique({
             where: { id },
@@ -50,7 +71,15 @@ export class DeliveryService {
         return delivery;
     }
 
-    // UPDATE
+    /**
+     * Updates an existing delivery record and checks for phone duplication.
+     *
+     * @param id The unique identifier of the delivery partner to update.
+     * @param data DTO containing fields to update.
+     * @returns The updated delivery entity.
+     * @throws NotFoundException If the delivery partner is not found.
+     * @throws ConflictException If the updated phone number is already registered to another delivery partner.
+     */
     async updateDelivery(
         id: number,
         data: UpdateDeliveryBodyDto,
@@ -74,7 +103,13 @@ export class DeliveryService {
         });
     }
 
-    // DELETE
+    /**
+     * Removes a delivery partner by ID.
+     *
+     * @param id The unique identifier of the delivery partner to delete.
+     * @returns The deleted delivery entity.
+     * @throws NotFoundException If the delivery partner is not found.
+     */
     async removeDelivery(id: number) {
         await this.findDeliveryById(id);
 

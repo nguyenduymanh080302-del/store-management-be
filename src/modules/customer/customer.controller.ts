@@ -24,9 +24,19 @@ import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 
 @Controller('customer')
 export class CustomerController {
+    /**
+     * Constructs the CustomerController instance.
+     *
+     * @param customerService Service handling customer domain operations.
+     */
     constructor(private readonly customerService: CustomerService) { }
 
-    // CREATE
+    /**
+     * Endpoint to create a new customer record.
+     *
+     * @param data DTO payload containing customer creation attributes.
+     * @returns ApiResponse containing created customer entity.
+     */
     @UseGuards(JwtAccessGuard)
     @Post()
     async createCustomer(
@@ -41,7 +51,11 @@ export class CustomerController {
         };
     }
 
-    // READ ALL
+    /**
+     * Endpoint to retrieve all customers sorted by name.
+     *
+     * @returns ApiResponse containing list of customer entities.
+     */
     @Get()
     async findAllCustomer(): Promise<ApiResponse<CustomerEntity[]>> {
         const result = await this.customerService.findAllCustomer();
@@ -53,7 +67,12 @@ export class CustomerController {
         };
     }
 
-    // READ ONE
+    /**
+     * Endpoint to retrieve a customer by ID.
+     *
+     * @param params DTO containing customer ID path parameter.
+     * @returns ApiResponse containing customer entity.
+     */
     @Get(':id')
     async findCustomerById(
         @Param() params: GetCustomerParamDto,
@@ -67,7 +86,14 @@ export class CustomerController {
         };
     }
 
-    // UPDATE
+    /**
+     * Endpoint to update an existing customer by ID.
+     *
+     * @param params DTO containing customer ID path parameter.
+     * @param data DTO payload containing updated customer fields.
+     * @returns ApiResponse containing updated customer entity.
+     * @throws BadRequestException If update payload is empty.
+     */
     @UseGuards(JwtAccessGuard)
     @Patch(':id')
     async updateCustomer(
@@ -87,7 +113,12 @@ export class CustomerController {
         };
     }
 
-    // DELETE
+    /**
+     * Endpoint to delete a customer by ID.
+     *
+     * @param params DTO containing customer ID path parameter.
+     * @returns ApiResponse indicating customer deletion success.
+     */
     @UseGuards(JwtAccessGuard)
     @Delete(':id')
     async removeCustomer(

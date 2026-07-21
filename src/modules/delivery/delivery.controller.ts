@@ -24,9 +24,19 @@ import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 
 @Controller('delivery')
 export class DeliveryController {
+    /**
+     * Constructs the DeliveryController instance.
+     *
+     * @param deliveryService Service handling delivery partner operations.
+     */
     constructor(private readonly deliveryService: DeliveryService) { }
 
-    // CREATE
+    /**
+     * Endpoint to create a new delivery partner record.
+     *
+     * @param data DTO payload containing delivery entity fields.
+     * @returns ApiResponse containing created delivery entity.
+     */
     @UseGuards(JwtAccessGuard)
     @Post()
     async createDelivery(
@@ -41,7 +51,11 @@ export class DeliveryController {
         };
     }
 
-    // READ ALL
+    /**
+     * Endpoint to retrieve all delivery partners.
+     *
+     * @returns ApiResponse containing list of delivery partner entities.
+     */
     @Get()
     async findAllDelivery(): Promise<ApiResponse<DeliveryEntity[]>> {
         const result = await this.deliveryService.findAllDelivery();
@@ -53,7 +67,12 @@ export class DeliveryController {
         };
     }
 
-    // READ ONE
+    /**
+     * Endpoint to find a delivery partner by ID.
+     *
+     * @param params DTO containing delivery ID path parameter.
+     * @returns ApiResponse containing delivery entity.
+     */
     @Get(':id')
     async findDeliveryById(
         @Param() params: GetDeliveryParamDto,
@@ -67,7 +86,14 @@ export class DeliveryController {
         };
     }
 
-    // UPDATE
+    /**
+     * Endpoint to update a delivery partner record by ID.
+     *
+     * @param params DTO containing delivery ID path parameter.
+     * @param data DTO payload containing fields to update.
+     * @returns ApiResponse containing updated delivery entity.
+     * @throws BadRequestException If update payload is empty.
+     */
     @UseGuards(JwtAccessGuard)
     @Patch(':id')
     async updateDelivery(
@@ -90,7 +116,12 @@ export class DeliveryController {
         };
     }
 
-    // DELETE
+    /**
+     * Endpoint to delete a delivery partner by ID.
+     *
+     * @param params DTO containing delivery ID path parameter.
+     * @returns ApiResponse indicating delivery deletion success.
+     */
     @UseGuards(JwtAccessGuard)
     @Delete(':id')
     async removeDelivery(

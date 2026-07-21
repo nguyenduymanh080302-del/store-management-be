@@ -30,10 +30,22 @@ import { OrderService } from './order.service';
 @Controller('order')
 @UseGuards(JwtAccessGuard, PermissionGuard)
 export class OrderController {
+    /**
+     * Constructs the OrderController instance.
+     *
+     * @param orderService Service handling sales order creation, querying, and stock deduction logic.
+     */
     constructor(
         private readonly orderService: OrderService,
     ) { }
 
+    /**
+     * Endpoint to create a new sales order. Requires MANAGE_SALES permission.
+     *
+     * @param data DTO payload containing order details (orderCode, products, customerId, deliveryId, etc.).
+     * @param accountId ID of the authenticated user creating the order.
+     * @returns ApiResponse containing created order record.
+     */
     @Permissions(Permission.MANAGE_SALES)
     @Post()
     async createOrder(
@@ -52,6 +64,12 @@ export class OrderController {
         };
     }
 
+    /**
+     * Endpoint to query and retrieve a paginated list of sales orders. Requires MANAGE_SALES permission.
+     *
+     * @param query DTO containing pagination parameters (page, limit), status filter, and search text.
+     * @returns ApiResponse containing paginated order items and total counts.
+     */
     @Permissions(Permission.MANAGE_SALES)
     @Get()
     async findAllOrder(
@@ -66,6 +84,12 @@ export class OrderController {
         };
     }
 
+    /**
+     * Endpoint to retrieve a specific order by ID. Requires MANAGE_SALES permission.
+     *
+     * @param params DTO containing order ID path parameter.
+     * @returns ApiResponse containing order details.
+     */
     @Permissions(Permission.MANAGE_SALES)
     @Get(':id')
     async findOrderById(
@@ -82,6 +106,14 @@ export class OrderController {
         };
     }
 
+    /**
+     * Endpoint to update an order by ID. Requires MANAGE_SALES permission.
+     *
+     * @param params DTO containing order ID path parameter.
+     * @param data DTO payload containing updated order properties.
+     * @returns ApiResponse containing updated order entity.
+     * @throws BadRequestException If update payload is empty.
+     */
     @Permissions(Permission.MANAGE_SALES)
     @Patch(':id')
     async updateOrder(
@@ -106,6 +138,12 @@ export class OrderController {
         };
     }
 
+    /**
+     * Endpoint to delete an order by ID and restore product stock. Requires MANAGE_SALES permission.
+     *
+     * @param params DTO containing order ID path parameter.
+     * @returns ApiResponse indicating order deletion success.
+     */
     @Permissions(Permission.MANAGE_SALES)
     @Delete(':id')
     async removeOrder(

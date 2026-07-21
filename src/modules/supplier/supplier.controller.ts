@@ -24,9 +24,19 @@ import { JwtAccessGuard } from 'common/guards/jwt-access.guard';
 
 @Controller('supplier')
 export class SupplierController {
+	/**
+	 * Constructs the SupplierController instance.
+	 *
+	 * @param supplierService Service handling supplier operations.
+	 */
 	constructor(private readonly supplierService: SupplierService) { }
 
-	// CREATE
+	/**
+	 * Endpoint to create a new supplier entity.
+	 *
+	 * @param data DTO payload containing supplier creation attributes.
+	 * @returns ApiResponse containing created supplier entity.
+	 */
 	@UseGuards(JwtAccessGuard)
 	@Post()
 	async createSupplier(
@@ -41,7 +51,11 @@ export class SupplierController {
 		};
 	}
 
-	// READ ALL
+	/**
+	 * Endpoint to retrieve all suppliers.
+	 *
+	 * @returns ApiResponse containing list of supplier entities.
+	 */
 	@Get()
 	async findAllSupplier(): Promise<ApiResponse<SupplierEntity[]>> {
 		const result = await this.supplierService.findAllSupplier();
@@ -53,7 +67,12 @@ export class SupplierController {
 		};
 	}
 
-	// READ ONE
+	/**
+	 * Endpoint to find a supplier by ID.
+	 *
+	 * @param params DTO containing supplier ID path parameter.
+	 * @returns ApiResponse containing supplier entity.
+	 */
 	@Get(':id')
 	async findSupplierById(
 		@Param() params: GetSupplierParamDto,
@@ -67,7 +86,14 @@ export class SupplierController {
 		};
 	}
 
-	// UPDATE
+	/**
+	 * Endpoint to update an existing supplier by ID.
+	 *
+	 * @param params DTO containing supplier ID path parameter.
+	 * @param data DTO payload containing updated supplier fields.
+	 * @returns ApiResponse containing updated supplier entity.
+	 * @throws BadRequestException If update payload is empty.
+	 */
 	@UseGuards(JwtAccessGuard)
 	@Patch(':id')
 	async updateSupplier(
@@ -90,7 +116,12 @@ export class SupplierController {
 		};
 	}
 
-	// DELETE
+	/**
+	 * Endpoint to delete a supplier by ID.
+	 *
+	 * @param params DTO containing supplier ID path parameter.
+	 * @returns ApiResponse indicating supplier deletion success.
+	 */
 	@UseGuards(JwtAccessGuard)
 	@Delete(':id')
 	async removeSupplier(

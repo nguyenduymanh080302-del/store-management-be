@@ -8,9 +8,20 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UnitService {
+  /**
+   * Constructs the UnitService instance.
+   *
+   * @param prisma Database service instance for Prisma ORM.
+   */
   constructor(private readonly prisma: PrismaService) { }
 
-  // CREATE
+  /**
+   * Creates a new measurement unit after checking name uniqueness.
+   *
+   * @param data DTO containing unit creation properties (name, description, etc.).
+   * @returns The created unit entity.
+   * @throws ConflictException If a unit with the same name already exists.
+   */
   async createUnit(
     data: CreateUnitBodyDto,
   ) {
@@ -26,14 +37,24 @@ export class UnitService {
     return newUnit
   }
 
-  // READ ALL
+  /**
+   * Retrieves all measurement units sorted by name in descending order.
+   *
+   * @returns List of all unit entities.
+   */
   async findAllUnit() {
     return await this.prisma.unit.findMany({
       orderBy: { name: 'desc' },
     });
   }
 
-  // READ ONE
+  /**
+   * Finds a measurement unit by its unique ID.
+   *
+   * @param id The unique identifier of the unit.
+   * @returns The unit entity if found.
+   * @throws NotFoundException If no unit is found with the given ID.
+   */
   async findUnitById(id: number) {
     const unit = await this.prisma.unit.findUnique({
       where: { id },
@@ -46,7 +67,14 @@ export class UnitService {
     return unit;
   }
 
-  // UPDATE
+  /**
+   * Updates an existing measurement unit by ID.
+   *
+   * @param id The unique identifier of the unit to update.
+   * @param data DTO containing fields to update in the unit.
+   * @returns The updated unit entity.
+   * @throws NotFoundException If the unit is not found.
+   */
   async updateUnit(
     id: number,
     data: UpdateUnitBodyDto,
@@ -59,7 +87,13 @@ export class UnitService {
     });
   }
 
-  // DELETE
+  /**
+   * Removes a measurement unit by ID.
+   *
+   * @param id The unique identifier of the unit to delete.
+   * @returns The deleted unit entity.
+   * @throws NotFoundException If the unit is not found.
+   */
   async removeUnit(id: number) {
     await this.findUnitById(id);
 

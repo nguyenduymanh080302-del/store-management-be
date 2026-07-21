@@ -15,6 +15,11 @@ import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class OrderService {
+    /**
+     * Constructs the OrderService instance.
+     *
+     * @param prisma Database service instance for Prisma ORM.
+     */
     constructor(private readonly prisma: PrismaService) { }
 
     private readonly orderInclude = {
@@ -40,6 +45,13 @@ export class OrderService {
         },
     };
 
+    /**
+     * Validates customer and delivery relation existence if IDs are provided.
+     *
+     * @param customerId Optional customer ID to check.
+     * @param deliveryId Optional delivery partner ID to check.
+     * @throws NotFoundException If specified customer or delivery partner does not exist.
+     */
     private async validateRelations(customerId?: number, deliveryId?: number) {
         const [customer, delivery] = await Promise.all([
             customerId ? this.prisma.customer.findUnique({ where: { id: customerId } }) : Promise.resolve(null),
@@ -50,6 +62,14 @@ export class OrderService {
         if (deliveryId && !delivery) throw new NotFoundException('message.order.delivery-not-found');
     }
 
+    /**
+     * Validates warehouse stock and decrements inventory for order items within a transaction.
+     *
+     * @param tx Prisma transaction client.
+     * @param products Array of product items in the order.
+     * @throws BadRequestException If duplicate items exist in payload or stock is insufficient.
+     * @throws NotFoundException If a warehouse or product unit does not exist.
+     */
     private async validateAndReduceStock(tx: Prisma.TransactionClient, products: OrderProductItemDto[]) {
         const keys = new Set<string>();
         const warehouseIds = new Set<number>();
@@ -87,6 +107,12 @@ export class OrderService {
         }
     }
 
+    /**
+     * Restores warehouse stock when an order is updated or deleted within a transaction.
+     *
+     * @param tx Prisma transaction client.
+     * @param products Array of product items containing warehouseId, productId, unitId, and quantity to increment.
+     */
     private async restoreStock(tx: Prisma.TransactionClient, products: Array<{ warehouseId: number | null; productId: number; unitId: number; quantity: number }>) {
         for (const item of products) {
             if (!item.warehouseId) continue;
@@ -97,6 +123,12 @@ export class OrderService {
         }
     }
 
+    /**
+     * Maps DTO order product items to Prisma order product creation payloads.
+     *
+     * @param products Array of order product DTO items.
+     * @returns Mapped order product item objects ready for database insertion.
+     */
     private buildOrderProducts(products: OrderProductItemDto[]) {
         return products.map((item) => ({
             warehouseId: item.warehouseId,
@@ -109,6 +141,14 @@ export class OrderService {
         }));
     }
 
+    /**
+     * Creates a new order, validates stock, reduces inventory, and attaches customer/delivery info.
+     *
+     * @param dto DTO containing order details (orderCode, customerId, deliveryId, products list, etc.).
+     * @param creatorId ID of the account user creating the order.
+     * @returns The created order with full inclusions.
+     * @throws ConflictException If orderCode already exists.
+     */
     async createOrder(dto: CreateOrderBodyDto, creatorId: number) {
         const { products, customerId, deliveryId, ...orderData } = dto;
         const existingOrder = await this.prisma.order.findUnique({ where: { orderCode: dto.orderCode } });
@@ -130,6 +170,12 @@ export class OrderService {
         });
     }
 
+    /**
+     * Retrieves a paginated list of orders matching search terms and status filters.
+     *
+     * @param query DTO containing page, limit, status filter, and search query string.
+     * @returns Paginated result containing order items and pagination metadata.
+     */
     async findAllOrder(query: GetOrdersQueryDto) {
         const trimmedSearch = query.search?.trim();
         const { page = 1, limit = 10, status } = query;
@@ -151,12 +197,28 @@ export class OrderService {
         return { items, pagination: { page, limit, total, totalPages: total === 0 ? 0 : Math.ceil(total / limit) } };
     }
 
+    /**
+     * Retrieves an order by its unique ID.
+     *
+     * @param id The unique identifier of the order.
+     * @returns The order entity with full relation inclusions.
+     * @throws NotFoundException If the order is not found.
+     */
     async findOrderById(id: number) {
         const order = await this.prisma.order.findUnique({ where: { id }, include: this.orderInclude });
         if (!order) throw new NotFoundException('message.order.not-found');
         return order;
     }
 
+    /**
+     * Updates an existing order, recalculating stock adjustments if product items are modified.
+     *
+     * @param id The unique identifier of the order to update.
+     * @param dto DTO containing fields to update in the order.
+     * @returns The updated order entity with full inclusions.
+     * @throws NotFoundException If the order is not found.
+     * @throws ConflictException If the updated orderCode belongs to another order.
+     */
     async updateOrder(id: number, dto: UpdateOrderBodyDto) {
         const currentOrder = await this.prisma.order.findUnique({
             where: { id }, select: { customerId: true, deliveryId: true, products: true },
@@ -190,6 +252,13 @@ export class OrderService {
         });
     }
 
+    /**
+     * Deletes an order by ID and restores inventory stock for its products.
+     *
+     * @param id The unique identifier of the order to remove.
+     * @returns The deleted order entity.
+     * @throws NotFoundException If the order is not found.
+     */
     async removeOrder(id: number) {
         const order = await this.prisma.order.findUnique({ where: { id }, select: { products: true } });
         if (!order) throw new NotFoundException('message.order.not-found');

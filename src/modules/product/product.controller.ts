@@ -30,10 +30,21 @@ import { ProductService } from './product.service';
 
 @Controller('product')
 export class ProductController {
+    /**
+     * Constructs the ProductController instance.
+     *
+     * @param productService Service handling product management, image uploads, and unit pricing.
+     */
     constructor(
         private readonly productService: ProductService,
     ) { }
 
+    /**
+     * Normalizes multipart form field data, converting stringified JSON arrays and numbers into native JS types.
+     *
+     * @param data Raw key-value object parsed from request body.
+     * @returns Normalized data object.
+     */
     private normalizeProductBody(data: Record<string, any>) {
         const normalized = { ...data };
 
@@ -63,6 +74,14 @@ export class ProductController {
         return normalized;
     }
 
+    /**
+     * Normalizes raw form body data and validates it against a target DTO class.
+     *
+     * @param dtoClass Target class constructor for DTO validation.
+     * @param data Raw key-value object parsed from request body.
+     * @returns Validated DTO instance.
+     * @throws BadRequestException If parsing fails or validation constraints are violated.
+     */
     private validatePayload<T extends object>(
         dtoClass: new () => T,
         data: Record<string, any>,
@@ -101,6 +120,13 @@ export class ProductController {
         return dto;
     }
 
+    /**
+     * Endpoint to create a new product along with uploaded image files.
+     *
+     * @param rawData Raw request body object containing product fields.
+     * @param imageFiles Array of uploaded multipart image files.
+     * @returns ApiResponse containing created product entity.
+     */
     @UseGuards(JwtAccessGuard)
     @Post()
     @UseInterceptors(
@@ -125,6 +151,12 @@ export class ProductController {
         };
     }
 
+    /**
+     * Endpoint to query and retrieve a paginated list of products with accent-insensitive search.
+     *
+     * @param query DTO containing page, limit, and optional search term.
+     * @returns ApiResponse containing paginated product list.
+     */
     @Get()
     async findAllProduct(
         @Query() query: GetProductsQueryDto,
@@ -138,6 +170,12 @@ export class ProductController {
         };
     }
 
+    /**
+     * Endpoint to find a product by ID.
+     *
+     * @param params DTO containing product ID path parameter.
+     * @returns ApiResponse containing product details.
+     */
     @Get(':id')
     async findProductById(
         @Param() params: GetProductParamDto,
@@ -153,6 +191,15 @@ export class ProductController {
         };
     }
 
+    /**
+     * Endpoint to update an existing product by ID with optional new image uploads and unit changes.
+     *
+     * @param params DTO containing product ID path parameter.
+     * @param rawData Raw request body object containing update fields.
+     * @param imageFiles Array of newly uploaded multipart image files.
+     * @returns ApiResponse containing updated product entity.
+     * @throws BadRequestException If no updated data or images are provided.
+     */
     @UseGuards(JwtAccessGuard)
     @Patch(':id')
     @UseInterceptors(
@@ -187,6 +234,12 @@ export class ProductController {
         };
     }
 
+    /**
+     * Endpoint to delete a product by ID and remove hosted images.
+     *
+     * @param params DTO containing product ID path parameter.
+     * @returns ApiResponse indicating product deletion success.
+     */
     @UseGuards(JwtAccessGuard)
     @Delete(':id')
     async removeProduct(

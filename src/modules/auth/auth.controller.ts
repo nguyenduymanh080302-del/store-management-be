@@ -20,8 +20,19 @@ import { AccountEntity } from 'common/entities/account.entity';
 
 @Controller('auth')
 export class AuthController {
+  /**
+   * Constructs the AuthController instance.
+   *
+   * @param authService Service handling authentication and account domain operations.
+   */
   constructor(private readonly authService: AuthService) { }
 
+  /**
+   * Endpoint for user account registration.
+   *
+   * @param payload DTO containing signup fields (username, password, name, roleId, etc.).
+   * @returns ApiResponse containing created account ID.
+   */
   @Post('signup')
   async signup(@Body() payload: SignupDto): Promise<ApiResponse<{ accountId: number }>> {
     const data = await this.authService.signup(payload);
@@ -32,6 +43,13 @@ export class AuthController {
     };
   }
 
+  /**
+   * Endpoint for user sign-in authentication.
+   *
+   * @param payload DTO containing signin credentials (username and password).
+   * @param req Express Request object to retrieve client user-agent and IP.
+   * @returns ApiResponse containing tokens and account data.
+   */
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signin(
@@ -46,6 +64,12 @@ export class AuthController {
     };
   }
 
+  /**
+   * Endpoint to log out and revoke current session.
+   *
+   * @param sessionId Session ID extracted from JWT access token.
+   * @returns ApiResponse indicating logout success.
+   */
   @UseGuards(JwtAccessGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
@@ -59,6 +83,13 @@ export class AuthController {
     };
   }
 
+  /**
+   * Endpoint to retrieve current authenticated user details.
+   *
+   * @param accountId Account ID extracted from access token payload.
+   * @returns ApiResponse containing account details without password hash.
+   * @throws UnauthorizedException If account ID is missing or invalid.
+   */
   @UseGuards(JwtAccessGuard)
   @Get('me')
   @HttpCode(HttpStatus.OK)
@@ -74,6 +105,14 @@ export class AuthController {
     };
   }
 
+  /**
+   * Endpoint to refresh access and refresh tokens using a valid refresh token.
+   *
+   * @param accountId Account ID extracted from refresh token payload.
+   * @param sessionId Session ID extracted from refresh token payload.
+   * @param refreshToken Refresh token string from authorization header.
+   * @returns ApiResponse containing new access and refresh tokens.
+   */
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)

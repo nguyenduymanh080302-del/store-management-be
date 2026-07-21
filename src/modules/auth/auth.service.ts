@@ -11,8 +11,22 @@ import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
+    /**
+     * Constructs the AuthService instance.
+     *
+     * @param prisma Database client service for account and session operations.
+     * @param config Service for accessing application environment configuration.
+     * @param jwtService Service for signing and verifying JWT tokens.
+     * @param sessionService Service for handling user sessions.
+     */
     constructor(private prisma: PrismaService, private config: ConfigService, private jwtService: JwtService, private sessionService: SessionService) { }
 
+    /**
+     * Retrieves an account by its unique identifier along with role information.
+     *
+     * @param accountId The unique ID of the account to retrieve.
+     * @returns The account record or null if not found.
+     */
     async getAccountById(accountId: number) {
         return this.prisma.account.findUnique({
             where: { id: accountId },
@@ -31,6 +45,12 @@ export class AuthService {
         });
     }
 
+    /**
+     * Retrieves an account by its username including role details.
+     *
+     * @param username The username of the account to search for.
+     * @returns The account entity with role details included, or null if not found.
+     */
     async getAccountByUsername(username: string) {
         return this.prisma.account.findUnique({
             where: { username: username },
@@ -40,6 +60,13 @@ export class AuthService {
         })
     }
 
+    /**
+     * Generates access and refresh JWT tokens for an account and session.
+     *
+     * @param account Object containing account id and role.
+     * @param sessionId The ID of the current active session.
+     * @returns An object containing the generated accessToken and refreshToken.
+     */
     async getTokens(account: Pick<AccountEntity, 'id' | 'role'>, sessionId: number) {
         const payload = {
             sub: account.id,
@@ -62,6 +89,13 @@ export class AuthService {
     }
 
 
+    /**
+     * Registers a new account in the system after verifying username uniqueness.
+     *
+     * @param payload DTO containing signup details (username, password, name, roleId, etc.).
+     * @returns Object containing the created accountId.
+     * @throws ConflictException If an account with the specified username already exists.
+     */
     async signup(payload: SignupDto) {
 
         const checkExistAccount = await this.getAccountByUsername(payload.username)
@@ -85,6 +119,14 @@ export class AuthService {
         return { accountId: newAccount.id }
     }
 
+    /**
+     * Authenticates a user with username and password, creating a session and returning tokens.
+     *
+     * @param payload DTO containing signin credentials (username and password).
+     * @param req The HTTP Express Request object used to extract IP and User-Agent metadata.
+     * @returns Object containing access/refresh tokens and sanitized account information.
+     * @throws ForbiddenException If credentials are invalid or account does not exist.
+     */
     async signin(payload: SigninDto, req: Request) {
         const { username, password } = payload;
 
@@ -115,6 +157,11 @@ export class AuthService {
     }
 
 
+    /**
+     * Revokes an existing user session on logout.
+     *
+     * @param sessionId The ID of the session to revoke.
+     */
     async logout(sessionId: number) {
         await this.prisma.session.update({
             where: { id: sessionId },
@@ -123,6 +170,15 @@ export class AuthService {
     }
 
 
+    /**
+     * Generates a new pair of access and refresh tokens using a valid refresh token.
+     *
+     * @param accountId ID of the account requesting token refresh.
+     * @param sessionId ID of the active session.
+     * @param refreshToken Current refresh token string for verification.
+     * @returns New access and refresh tokens.
+     * @throws UnauthorizedException If account does not exist or session validation fails.
+     */
     async refresh(
         accountId: number,
         sessionId: number,

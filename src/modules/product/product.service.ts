@@ -21,6 +21,12 @@ type UploadedProductFile = {
 
 @Injectable()
 export class ProductService {
+    /**
+     * Constructs the ProductService instance.
+     *
+     * @param prisma Database service instance for Prisma ORM.
+     * @param imageService Service for uploading and managing Cloudinary product images.
+     */
     constructor(
         private readonly prisma: PrismaService,
         private readonly imageService: ImageService,
@@ -34,7 +40,13 @@ export class ProductService {
         category: true,
     };
 
-    /* ---------- CREATE ---------- */
+    /**
+     * Creates a new product along with associated uploaded images and product unit pricing information.
+     *
+     * @param dto DTO containing product properties (name, slug, categoryId, units list, base64 images, etc.).
+     * @param imageFiles Array of multipart uploaded image files.
+     * @returns Created product entity with images, category, and units.
+     */
     async createProduct(
         dto: CreateProductBodyDto,
         imageFiles: UploadedProductFile[] = [],
@@ -79,7 +91,12 @@ export class ProductService {
         });
     }
 
-    /* ---------- READ ALL ---------- */
+    /**
+     * Retrieves a paginated list of products with accent-insensitive search capabilities across name, slug, and description.
+     *
+     * @param query DTO containing page, limit, and optional search text.
+     * @returns Object with array of product items and pagination details.
+     */
     async findAllProduct(query: GetProductsQueryDto) {
         const trimmedSearch = query.search?.trim();
         const { page = 1, limit = 10 } = query;
@@ -156,7 +173,13 @@ export class ProductService {
         };
     }
 
-    /* ---------- READ ONE ---------- */
+    /**
+     * Finds a single product by its ID, including images, category, and units.
+     *
+     * @param id The unique identifier of the product.
+     * @returns The product entity if found.
+     * @throws NotFoundException If no product exists with the specified ID.
+     */
     async findProductById(id: number) {
         const product = await this.prisma.product.findUnique({
             where: { id },
@@ -170,7 +193,15 @@ export class ProductService {
         return product;
     }
 
-    /* ---------- UPDATE ---------- */
+    /**
+     * Updates product details, image list (adding/deleting), and associated units.
+     *
+     * @param productId The ID of the product to update.
+     * @param dto DTO containing updated product fields, image IDs to delete, base64 images, and unit configuration.
+     * @param imageFiles Array of newly uploaded image files.
+     * @returns Updated product entity with full relation inclusions.
+     * @throws BadRequestException If attempting to remove a unit that is referenced in orders, imports, or warehouse stock.
+     */
     async updateProduct(
         productId: number,
         dto: UpdateProductBodyDto,
@@ -300,7 +331,13 @@ export class ProductService {
         });
     }
 
-    /* ---------- DELETE ---------- */
+    /**
+     * Deletes a product by ID and cleans up hosted images from Cloudinary.
+     *
+     * @param id The unique identifier of the product to delete.
+     * @returns The deleted product entity.
+     * @throws NotFoundException If the product is not found.
+     */
     async removeProduct(id: number) {
         const product = await this.prisma.product.findUnique({
             where: { id },
